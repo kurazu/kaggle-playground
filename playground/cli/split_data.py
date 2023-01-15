@@ -55,6 +55,9 @@ logger = logging.getLogger(__name__)
     required=True,
     default=1,
 )
+@click.option(
+    "--label-column", type=str, required=True, default="classification_target"
+)
 def main(
     input_file: Path,
     train_output_file: Path,
@@ -63,9 +66,10 @@ def main(
     validation_parts: int,
     evaluation_output_file: Path,
     evaluation_parts: int,
+    label_column: str,
 ) -> None:
     df = pl.scan_csv(input_file)
-    ids, labels = df.select(["id", "stroke"]).collect()
+    ids, labels = df.select(["id", label_column]).collect()
     train_ids, rest_ids, train_labels, rest_labels = train_test_split(
         ids,
         labels,

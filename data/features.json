@@ -1,0 +1,72 @@
+{
+  "gender": {
+    "type": "categorical",
+    "values": [
+      "Female",
+      "Male",
+      "Other"
+    ]
+  },
+  "hypertension": {
+    "type": "categorical",
+    "values": [
+      "no",
+      "yes"
+    ]
+  },
+  "heart_disease": {
+    "type": "categorical",
+    "values": [
+      "no",
+      "yes"
+    ]
+  },
+  "ever_married": {
+    "type": "categorical",
+    "values": [
+      "No",
+      "Yes"
+    ]
+  },
+  "work_type": {
+    "type": "categorical",
+    "values": [
+      "Govt_job",
+      "Never_worked",
+      "Private",
+      "Self-employed",
+      "children"
+    ]
+  },
+  "residence_type": {
+    "type": "categorical",
+    "values": [
+      "Rural",
+      "Urban"
+    ]
+  },
+  "smoking_status": {
+    "type": "categorical",
+    "values": [
+      "Unknown",
+      "formerly smoked",
+      "never smoked",
+      "smokes"
+    ]
+  },
+  "age": {
+    "type": "numerical",
+    "mean": 41.417707788813395,
+    "std": 21.44467331631979
+  },
+  "avg_glucose_level": {
+    "type": "numerical",
+    "mean": 89.03985297961319,
+    "std": 25.47610198460922
+  },
+  "bmi": {
+    "type": "numerical",
+    "mean": 28.11272085729222,
+    "std": 6.722315422227755
+  }
+}
