@@ -50,3 +50,14 @@ saved_model: \
 		--validation-file=split/valid.transformed.csv \
 		--evaluation-file=split/eval.transformed.csv \
 		--output-dir=saved_model
+
+data/submission.csv: \
+		data/test.transformed.csv \
+		saved_model \
+		playground/cli/predict.py \
+		playground/model/predict.py
+	poetry run python \
+		-m playground.cli.predict \
+		--input-file=data/test.transformed.csv \
+		--output-file=data/submission.csv \
+		--model-dir=saved_model
