@@ -41,4 +41,12 @@ split: \
 		--validation-output-file=split/valid.transformed.csv \
 		--evaluation-output-file=split/eval.transformed.csv
 
-		
+saved_model: \
+		split \
+		playground/model/train.py
+	poetry run python \
+		-m playground.cli.train \
+		--train-file=split/train.transformed.csv \
+		--validation-file=split/valid.transformed.csv \
+		--evaluation-file=split/eval.transformed.csv \
+		--output-dir=saved_model
