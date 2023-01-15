@@ -20,6 +20,18 @@ data/train.transformed.csv: \
 		--input-file=data/train.csv \
 		--output-file=data/train.transformed.csv
 
+data/old.transformed.csv: \
+		data/old.csv \
+		data/features.json \
+		playground/cli/transform.py \
+		playground/feature_engineering
+	poetry run python \
+		-m playground.cli.transform \
+		--config-file=data/features.json \
+		--target-column=stroke \
+		--input-file=data/old.csv \
+		--output-file=data/old.transformed.csv
+
 data/test.transformed.csv: \
 		data/test.csv \
 		data/features.json \
@@ -47,6 +59,7 @@ saved_model: \
 	poetry run python \
 		-m playground.cli.train \
 		--train-file=split/train.transformed.csv \
+		--old-file=data/old.transformed.csv \
 		--validation-file=split/valid.transformed.csv \
 		--evaluation-file=split/eval.transformed.csv \
 		--output-dir=saved_model

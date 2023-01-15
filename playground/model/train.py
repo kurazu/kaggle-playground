@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Dict
+from typing import Dict, TypedDict
 
 import numpy as np
 import tensorflow as tf
@@ -32,6 +32,7 @@ def get_hidden(
 def train_model(
     *,
     train_ds: tf.data.Dataset,
+    old_ds: tf.data.Dataset,
     valid_ds: tf.data.Dataset,
     inputs: Dict[str, tf.Tensor],
     class_weight: Dict[float, float],
@@ -60,6 +61,27 @@ def train_model(
     )
 
     logger.debug("Training model with class weights: %s", class_weight)
+    model.fit(
+        old_ds,
+        validation_data=valid_ds,
+        epochs=20,
+        verbose=1,
+        callbacks=[
+            tf.keras.callbacks.ReduceLROnPlateau(
+                monitor="val_loss",
+                factor=0.1,
+                patience=1,
+                verbose=1,
+            ),
+            tf.keras.callbacks.EarlyStopping(
+                monitor="val_loss",
+                patience=3,
+                verbose=1,
+                restore_best_weights=True,
+            ),
+        ],
+        class_weight=class_weight,
+    )
     # make a positive sample more important than a negative sample
     model.fit(
         train_ds,
@@ -86,9 +108,17 @@ def train_model(
     return model
 
 
+class HyperParams(TypedDict):
+    dropout: float
+    layers: int
+    first_layer_units: int
+    activation: str
+
+
 def train(
     *,
     train_file: Path,
+    old_file: Path,
     validation_file: Path,
     evaluation_file: Path,
     model_directory: Path,
@@ -104,6 +134,16 @@ def train(
 
     train_ds = tf.data.experimental.make_csv_dataset(
         str(train_file),
+        batch_size,
+        label_name="classification_target",
+        num_epochs=1,
+        shuffle=True,
+        shuffle_buffer_size=1000,
+        shuffle_seed=17,
+    )
+
+    old_ds = tf.data.experimental.make_csv_dataset(
+        str(old_file),
         batch_size,
         label_name="classification_target",
         num_epochs=1,
@@ -136,10 +176,12 @@ def train(
         name: tf.keras.layers.Input(shape=(), name=name, dtype=tf.float32)
         for name in input_feature_names
     }
+
     models = [
         train_model(
             train_ds=train_ds,
             valid_ds=valid_ds,
+            old_ds=old_ds,
             inputs=inputs,
             class_weight=class_weight,
             dropout=0.5,
@@ -150,6 +192,7 @@ def train(
         train_model(
             train_ds=train_ds,
             valid_ds=valid_ds,
+            old_ds=old_ds,
             inputs=inputs,
             class_weight=class_weight,
             dropout=0.5,
@@ -160,6 +203,7 @@ def train(
         train_model(
             train_ds=train_ds,
             valid_ds=valid_ds,
+            old_ds=old_ds,
             inputs=inputs,
             class_weight=class_weight,
             dropout=0.25,
