@@ -1,4 +1,9 @@
-from typing import List, Literal, TypedDict, Union
+from typing import List, TypedDict, Union
+
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 
 class CategoricalFeatureConfig(TypedDict):
