@@ -19,14 +19,6 @@ logger = logging.getLogger(__name__)
     default="split/train.transformed.csv",
 )
 @click.option(
-    "--old-file",
-    type=click.Path(
-        exists=True, file_okay=True, dir_okay=False, readable=True, path_type=Path
-    ),
-    required=True,
-    default="data/old.transformed.csv",
-)
-@click.option(
     "--validation-file",
     type=click.Path(
         exists=True, file_okay=True, dir_okay=False, readable=True, path_type=Path
@@ -49,7 +41,6 @@ logger = logging.getLogger(__name__)
 )
 def main(
     train_file: Path,
-    old_file: Path,
     validation_file: Path,
     evaluation_file: Path,
     output_dir: Path,
@@ -57,7 +48,6 @@ def main(
     logger.debug("Starting training")
     train(
         train_file=train_file,
-        old_file=old_file,
         validation_file=validation_file,
         evaluation_file=evaluation_file,
         model_directory=output_dir,

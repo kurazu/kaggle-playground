@@ -59,7 +59,6 @@ saved_model: \
 	poetry run python \
 		-m playground.cli.train \
 		--train-file=split/train.transformed.csv \
-		--old-file=data/old.transformed.csv \
 		--validation-file=split/valid.transformed.csv \
 		--evaluation-file=split/eval.transformed.csv \
 		--output-dir=saved_model
