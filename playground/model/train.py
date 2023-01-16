@@ -1,7 +1,7 @@
 import logging
 import tempfile
 from pathlib import Path
-from typing import Dict, TypedDict
+from typing import TypedDict
 
 import keras_tuner as kt
 import numpy as np
@@ -17,21 +17,33 @@ logger = logging.getLogger(__name__)
 
 def get_hidden(all_inputs: tf.Tensor, hp: kt.HyperParameters) -> tf.Tensor:
     layers: int = hp.Int("layers", 1, 3)
-    first_layer_units: int = hp.Int("first_layer_units", 32, 2048, step=32)
+    first_layer_units: int = hp.Choice(
+        "first_layer_units", [32, 64, 128, 512, 1024, 2048]
+    )
     dropout: float = hp.Float("dropout", 0.0, 0.5, step=0.1)
     activation: str = hp.Choice(
         "activation", ["relu", "tanh", "sigmoid", "elu", "selu"]
     )
+    regularization: str | None = hp.Choice(
+        "regularization", ["l1", "l2", "l1_l2", "none"]
+    )
+    if regularization == "none":
+        regularization = None
     hidden = all_inputs
     units = first_layer_units
     for i in range(layers):
-        hidden = tf.keras.layers.Dense(units, activation=activation)(hidden)
+        hidden = tf.keras.layers.Dense(
+            units,
+            activation=activation,
+            kernel_regularizer=regularization,
+            bias_regularizer=regularization,
+        )(hidden)
         hidden = tf.keras.layers.Dropout(dropout)(hidden)
         units //= 2
     return hidden
 
 
-def build_model(hp: kt.HyperParameters, inputs: Dict[str, tf.Tensor]) -> tf.keras.Model:
+def build_model(hp: kt.HyperParameters, inputs: dict[str, tf.Tensor]) -> tf.keras.Model:
     all_inputs = tf.stack(list(inputs.values()), axis=-1)
 
     hidden = get_hidden(
@@ -56,11 +68,12 @@ def train_model(
     *,
     train_ds: tf.data.Dataset,
     valid_ds: tf.data.Dataset,
-    inputs: Dict[str, tf.Tensor],
-    class_weight: Dict[float, float],
+    train_and_valid_ds: tf.data.Dataset,
+    inputs: dict[str, tf.Tensor],
+    class_weight: dict[float, float],
 ) -> tf.keras.Model:
     with tempfile.TemporaryDirectory(prefix="keras_tuner") as temp_dir:
-
+        logger.debug("Using %s as temporary directory", temp_dir)
         tuner = kt.Hyperband(
             partial(build_model, inputs=inputs),
             objective=kt.Objective("val_auc", direction="max"),
@@ -84,7 +97,7 @@ def train_model(
                 restore_best_weights=True,
             ),
         ]
-
+        logger.debug("Starting hyperparameter search")
         tuner.search(
             train_ds,
             validation_data=valid_ds,
@@ -97,31 +110,52 @@ def train_model(
         (best_hps,) = tuner.get_best_hyperparameters(num_trials=1)
         logger.info("Best hyperparameters: %s", best_hps.values)
 
-        model = tuner.hypermodel.build(best_hps)
-        history = model.fit(
-            train_ds,
-            validation_data=valid_ds,
-            epochs=10,
-            verbose=1,
-            class_weight=class_weight,
-            callbacks=callbacks,
-        )
+    model = tuner.hypermodel.build(best_hps)
+    history = model.fit(
+        train_ds,
+        validation_data=valid_ds,
+        epochs=10,
+        verbose=1,
+        class_weight=class_weight,
+        callbacks=callbacks,
+    )
+    val_auc_per_epoch = history.history["val_auc"]
+    best_epoch = np.argmax(val_auc_per_epoch) + 1
+    logger.info("Best epoch is %d", best_epoch)
 
-        val_auc_per_epoch = history.history["val_auc"]
-        best_epoch = np.argmax(val_auc_per_epoch) + 1
-
+    hypermodels: list[tf.keras.Model] = []
+    for i in range(3):
+        logger.info("Training hypermodel %d", i + 1)
         hypermodel = tuner.hypermodel.build(best_hps)
         hypermodel.fit(
-            train_ds,
-            validation_data=valid_ds,
+            train_and_valid_ds,
             epochs=best_epoch,
             verbose=1,
             class_weight=class_weight,
-            callbacks=callbacks,
+            callbacks=[],
         )
+        hypermodels.append(hypermodel)
+
+    logger.debug("Wrapping ensemble model")
+    ensemble_model = wrap_ensemble(inputs, hypermodels)
 
     logger.info("Model trained")
-    return model
+    return ensemble_model
+
+
+def wrap_ensemble(
+    inputs: dict[str, tf.Tensor], models: list[tf.keras.Model]
+) -> tf.keras.Model:
+    concatenated_predictions = tf.keras.layers.Concatenate()(
+        [model.output for model in models]
+    )
+    mean_predictions = tf.reduce_mean(concatenated_predictions, axis=-1, keepdims=True)
+    ensemble_model = tf.keras.Model(inputs=inputs, outputs=mean_predictions)
+    ensemble_model.compile(
+        loss="binary_crossentropy",
+        metrics=["accuracy", tf.keras.metrics.AUC()],
+    )
+    return ensemble_model
 
 
 class HyperParams(TypedDict):
@@ -164,6 +198,15 @@ def train(
         num_epochs=1,
         shuffle=False,
     )
+    train_and_valid_ds = tf.data.experimental.make_csv_dataset(
+        [str(train_file), str(validation_file)],
+        batch_size,
+        label_name="classification_target",
+        num_epochs=1,
+        shuffle=True,
+        shuffle_buffer_size=2000,
+        shuffle_seed=17,
+    )
     eval_ds = tf.data.experimental.make_csv_dataset(
         str(evaluation_file),
         batch_size,
@@ -173,7 +216,7 @@ def train(
     )
     class_weight = get_class_weights(train_file)
 
-    inputs_spec: Dict[str, tf.TensorSpec]
+    inputs_spec: dict[str, tf.TensorSpec]
     inputs_spec, labels_spec = train_ds.element_spec
 
     input_feature_names = set(inputs_spec) - {"id"}
@@ -185,52 +228,10 @@ def train(
     model = train_model(
         train_ds=train_ds,
         valid_ds=valid_ds,
+        train_and_valid_ds=train_and_valid_ds,
         inputs=inputs,
         class_weight=class_weight,
     )
-
-    # models = [
-    #     train_model(
-    #         train_ds=train_ds,
-    #         valid_ds=valid_ds,
-    #         inputs=inputs,
-    #         class_weight=class_weight,
-    #         dropout=0.5,
-    #         layers=3,
-    #         first_layer_units=1024,
-    #         activation="relu",
-    #     ),
-    #     train_model(
-    #         train_ds=train_ds,
-    #         valid_ds=valid_ds,
-    #         inputs=inputs,
-    #         class_weight=class_weight,
-    #         dropout=0.5,
-    #         layers=3,
-    #         first_layer_units=2048,
-    #         activation="selu",
-    #     ),
-    #     train_model(
-    #         train_ds=train_ds,
-    #         valid_ds=valid_ds,
-    #         inputs=inputs,
-    #         class_weight=class_weight,
-    #         dropout=0.25,
-    #         layers=2,
-    #         first_layer_units=512,
-    #         activation="relu",
-    #     ),
-    # ]
-
-    # concatenated_predictions = tf.keras.layers.Concatenate()(
-    #     [model.output for model in models]
-    # )
-    # mean_predictions = tf.reduce_mean(concatenated_predictions, axis=-1, keepdims=True)
-    # ensemble_model = tf.keras.Model(inputs=inputs, outputs=mean_predictions)
-    # ensemble_model.compile(
-    #     loss="binary_crossentropy",
-    #     metrics=["accuracy", tf.keras.metrics.AUC()],
-    # )
 
     logger.debug("Saving model to %s", model_directory)
     model.save(model_directory)

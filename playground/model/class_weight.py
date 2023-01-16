@@ -1,12 +1,11 @@
 from pathlib import Path
-from typing import Dict
 
 import polars as pl
 
 
 def get_class_weights(
     train_file: Path, target_column_name: str = "classification_target"
-) -> Dict[float, float]:
+) -> dict[float, float]:
     df = pl.scan_csv(train_file)
     total_samples, positive_samples, negative_samples = (
         df.select(
