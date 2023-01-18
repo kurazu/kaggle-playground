@@ -6,6 +6,7 @@ import polars as pl
 from sklearn.model_selection import train_test_split
 
 from ..logs import setup_logging
+from ..pipelines import load_customization
 
 logger = logging.getLogger(__name__)
 
@@ -17,13 +18,11 @@ logger = logging.getLogger(__name__)
         exists=True, dir_okay=False, file_okay=True, readable=True, path_type=Path
     ),
     required=True,
-    default="data/train.csv",
 )
 @click.option(
     "--train-output-file",
     type=click.Path(dir_okay=False, file_okay=True, writable=True, path_type=Path),
     required=True,
-    default="split/train.csv",
 )
 @click.option(
     "--train-parts",
@@ -35,7 +34,6 @@ logger = logging.getLogger(__name__)
     "--validation-output-file",
     type=click.Path(dir_okay=False, file_okay=True, writable=True, path_type=Path),
     required=True,
-    default="split/validation.csv",
 )
 @click.option(
     "--validation-parts",
@@ -47,7 +45,6 @@ logger = logging.getLogger(__name__)
     "--evaluation-output-file",
     type=click.Path(dir_okay=False, file_okay=True, writable=True, path_type=Path),
     required=True,
-    default="split/evaluation.csv",
 )
 @click.option(
     "--evaluation-parts",
@@ -56,7 +53,7 @@ logger = logging.getLogger(__name__)
     default=1,
 )
 @click.option(
-    "--label-column", type=str, required=True, default="classification_target"
+    "--customization", "customization_importable_name", type=str, required=True
 )
 def main(
     input_file: Path,
@@ -66,10 +63,13 @@ def main(
     validation_parts: int,
     evaluation_output_file: Path,
     evaluation_parts: int,
-    label_column: str,
+    customization_importable_name: str,
 ) -> None:
-    df = pl.scan_csv(input_file)
-    ids, labels = df.select(["id", label_column]).collect()
+    customization = load_customization(customization_importable_name)
+    df = customization.scan_raw_dataset(input_file)
+    ids, labels = df.select(
+        ["id", customization.engineered_label_column_name]
+    ).collect()
     train_ids, rest_ids, train_labels, rest_labels = train_test_split(
         ids,
         labels,

@@ -3,7 +3,7 @@ from pathlib import Path
 import click
 
 from ..logs import setup_logging
-from ..model.predict import predict
+from ..pipelines import load_customization
 
 
 @click.command()
@@ -23,14 +23,18 @@ from ..model.predict import predict
     "--model-dir",
     type=click.Path(file_okay=False, dir_okay=True, readable=True, path_type=Path),
     required=True,
-    default="dnn_saved_model",
+)
+@click.option(
+    "--customization", "customization_importable_name", type=str, required=True
 )
 def main(
     input_file: Path,
     output_file: Path,
     model_dir: Path,
+    customization_importable_name: str,
 ) -> None:
-    predict(
+    customization = load_customization(customization_importable_name)
+    customization.predict(
         model_directory=model_dir,
         input=input_file,
         output=output_file,

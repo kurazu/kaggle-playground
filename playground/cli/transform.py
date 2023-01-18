@@ -1,11 +1,13 @@
 import logging
 from pathlib import Path
-from typing import Optional
 
 import click
 
-from ..feature_engineering.transform import transform
+from ..feature_engineering.config import FeatureConfig
+from ..feature_engineering.transform import transform_engineered
 from ..logs import setup_logging
+from ..pipelines import load_customization
+from ..utils import read_json
 
 logger = logging.getLogger(__name__)
 
@@ -24,25 +26,40 @@ logger = logging.getLogger(__name__)
         exists=True, file_okay=True, dir_okay=False, readable=True, path_type=Path
     ),
     required=True,
-    default="features.json",
 )
-@click.option("--target-column", type=str, required=False)
+@click.option(
+    "--customization", "customization_importable_name", type=str, required=True
+)
 @click.option(
     "--output-file",
     type=click.Path(file_okay=True, dir_okay=False, writable=True, path_type=Path),
     required=True,
 )
 def main(
-    input_file: Path, config_file: Path, target_column: Optional[str], output_file: Path
+    input_file: Path,
+    config_file: Path,
+    customization_importable_name: str,
+    output_file: Path,
 ) -> None:
+    customization = load_customization(customization_importable_name)
     logger.info(
-        "Transforming file %s with config %s, target column %r and writing to %s",
+        "Transforming file %s with config %s and writing to %s",
         input_file,
         config_file,
-        target_column,
         output_file,
     )
-    transform(input_file, config_file, target_column, output_file)
+    raw_df = customization.scan_raw_dataset(input_file)
+    engineered_df = customization.feature_engineering(
+        raw_df, customization.raw_label_column_name
+    )
+    configuration: dict[str, FeatureConfig] = read_json(config_file)
+    transformed_df = transform_engineered(
+        engineered_df,
+        configuration,
+        customization.engineered_label_column_name in engineered_df.columns,
+    )
+    materialized_df = transformed_df.collect()
+    materialized_df.write_csv(output_file)
     logger.info("Done")
 
 

@@ -1,20 +1,16 @@
 import itertools as it
 import math
-from pathlib import Path
-from typing import Dict, Iterable, Optional, cast
+from typing import Dict, Iterable, cast
 
 import polars as pl
 from unidecode import unidecode
 
-from ..utils import read_json
 from .config import (
     CategoricalFeatureConfig,
     CyclicalFeatureConfig,
     FeatureConfig,
     NumericalFeatureConfig,
 )
-from .engineering import input_feature_engineering
-from .raw import scan_raw_dataset
 
 
 def get_categorical_feature_expr(
@@ -85,20 +81,3 @@ def transform_engineered(
         )
 
     return engineered_df.select(list(expressions))
-
-
-def transform(
-    input: Path, config: Path, target_column: Optional[str], output: Path
-) -> None:
-    """
-    Transform the raw input dataset (a training or inference dataset)
-    into a dataset of engineered features.
-    """
-    raw_df = scan_raw_dataset(input)
-    engineered_df = input_feature_engineering(raw_df, target_column)
-    configuration: Dict[str, FeatureConfig] = read_json(config)
-    transformed_df = transform_engineered(
-        engineered_df, configuration, target_column is not None
-    )
-    materialized_df = transformed_df.collect()
-    materialized_df.write_csv(output)

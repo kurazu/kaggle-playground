@@ -1,75 +1,66 @@
-data/features.json: \
-		data/train.csv \
-		playground/cli/feature_engineering.py \
-		playground/feature_engineering
+s03e02/features.json: \
+		s03e02/train.csv \
+		playground/pipelines/s03e02.py
 	poetry run python \
-		-m playground.cli.feature_engineering \
-		--train-file=data/train.csv \
-		--config-file=data/features.json \
-		--target-column=stroke
+		-m playground.cli.fit \
+		--train-file=s03e02/train.csv \
+		--config-file=s03e02/features.json \
+		--customization=playground.pipelines.s03e02.model_customization
 
-data/train.transformed.csv: \
-		data/train.csv \
-		data/features.json \
-		playground/cli/transform.py \
-		playground/feature_engineering
+s03e02/train.transformed.csv: \
+		s03e02/train.csv \
+		s03e02/features.json \
+		playground/pipelines/s03e02.py
 	poetry run python \
 		-m playground.cli.transform \
-		--config-file=data/features.json \
-		--target-column=stroke \
-		--input-file=data/train.csv \
-		--output-file=data/train.transformed.csv
+		--config-file=s03e02/features.json \
+		--customization=playground.pipelines.s03e02.model_customization \
+		--input-file=s03e02/train.csv \
+		--output-file=s03e02/train.transformed.csv
 
-data/old.transformed.csv: \
-		data/old.csv \
-		data/features.json \
-		playground/cli/transform.py \
-		playground/feature_engineering
+s03e02/test.transformed.csv: \
+		s03e02/test.csv \
+		s03e02/features.json \
+		playground/pipelines/s03e02.py
 	poetry run python \
 		-m playground.cli.transform \
-		--config-file=data/features.json \
-		--target-column=stroke \
-		--input-file=data/old.csv \
-		--output-file=data/old.transformed.csv
+		--config-file=s03e02/features.json \
+		--customization=playground.pipelines.s03e02.model_customization \
+		--input-file=s03e02/test.csv \
+		--output-file=s03e02/test.transformed.csv
 
-data/test.transformed.csv: \
-		data/test.csv \
-		data/features.json \
-		playground/cli/transform.py \
-		playground/feature_engineering
-	poetry run python \
-		-m playground.cli.transform \
-		--config-file=data/features.json \
-		--input-file=data/test.csv \
-		--output-file=data/test.transformed.csv
-
-split: \
-		data/train.transformed.csv \
-		playground/cli/split_data.py
+s03e02/split.train.csv s03e02/split.valid.csv s03e02/split.eval.csv: \
+		s03e02/train.transformed.csv \
+		playground/cli/split_data.py \
+		playground/pipelines/s03e02.py
 	poetry run python \
 		-m playground.cli.split_data \
-		--input-file=data/train.transformed.csv \
-		--train-output-file=split/train.transformed.csv \
-		--validation-output-file=split/valid.transformed.csv \
-		--evaluation-output-file=split/eval.transformed.csv
+		--input-file=s03e02/train.transformed.csv \
+		--train-output-file=s03e02/split.train.csv \
+		--validation-output-file=s03e02/split.valid.csv \
+		--evaluation-output-file=s03e02/split.eval.csv \
+		--customization=playground.pipelines.s03e02.model_customization
 
-saved_model: \
-		split \
-		playground/model/train.py
+s03e02/saved_model: \
+		s03e02/split.train.csv \
+		s03e02/split.valid.csv \
+		s03e02/split.eval.csv \
+		playground/pipelines/s03e02.py
 	poetry run python \
 		-m playground.cli.train \
-		--train-file=split/train.transformed.csv \
-		--validation-file=split/valid.transformed.csv \
-		--evaluation-file=split/eval.transformed.csv \
-		--output-dir=saved_model
+		--customization=playground.pipelines.s03e02.model_customization \
+		--train-file=s03e02/split.train.csv \
+		--validation-file=s03e02/split.valid.csv \
+		--evaluation-file=s03e02/split.eval.csv \
+		--output-dir=s03e02/saved_model
 
-data/submission.csv: \
-		data/test.transformed.csv \
-		saved_model \
-		playground/cli/predict.py \
-		playground/model/predict.py
+s03e02/submission.csv: \
+		s03e02/test.transformed.csv \
+		s03e02/saved_model \
+		playground/pipelines/s03e02.py 
 	poetry run python \
 		-m playground.cli.predict \
-		--input-file=data/test.transformed.csv \
-		--output-file=data/submission.csv \
+		--customization=playground.pipelines.s03e02.model_customization \
+		--input-file=s03e02/test.transformed.csv \
+		--output-file=s03e02/submission.csv \
 		--model-dir=saved_model
