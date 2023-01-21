@@ -49,9 +49,7 @@ def main(
         output_file,
     )
     raw_df = customization.scan_raw_dataset(input_file)
-    engineered_df = customization.feature_engineering(
-        raw_df, customization.raw_label_column_name
-    )
+    engineered_df = customization.feature_engineering(raw_df)
     configuration: dict[str, FeatureConfig] = read_json(config_file)
     transformed_df = transform_engineered(
         engineered_df,

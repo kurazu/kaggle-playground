@@ -10,12 +10,13 @@ from returns.curry import partial
 from sklearn.metrics import roc_auc_score
 
 from ..feature_engineering import Features
+from ..feature_engineering.engineering import get_auto_features
 from . import ModelCustomizationInterface
 
 logger = logging.getLogger(__name__)
 
 
-class S03E02ModelCustomization:
+class S03E03ModelCustomization:
     @classmethod
     def scan_raw_dataset(cls, input_file: Path) -> pl.LazyFrame:
         return pl.scan_csv(input_file)
@@ -24,62 +25,23 @@ class S03E02ModelCustomization:
     def feature_engineering(cls, raw_df: pl.LazyFrame) -> pl.LazyFrame:
         return raw_df.select(
             [
-                pl.col(cls.id_column_name),
-                pl.col("gender"),
-                pl.col("age"),
-                pl.when(pl.col("hypertension") == 1)
-                .then(pl.lit("yes"))
-                .otherwise(pl.lit("no"))
-                .alias("hypertension"),
-                pl.when(pl.col("heart_disease") == 1)
-                .then(pl.lit("yes"))
-                .otherwise(pl.lit("no"))
-                .alias("heart_disease"),
-                pl.col("ever_married"),
-                pl.col("work_type"),
-                pl.col("Residence_type").alias("residence_type"),
-                pl.col("avg_glucose_level"),
-                pl.col("bmi"),
-                pl.col("smoking_status"),
+                pl.col(column_name).alias(cls.engineered_label_column_name)
+                if column_name == cls.raw_label_column_name
+                else pl.col(column_name)
+                for column_name in raw_df.columns
             ]
-            + (
-                [
-                    pl.col(cls.raw_label_column_name).alias(
-                        cls.engineered_label_column_name
-                    )
-                ]
-                if cls.raw_label_column_name in raw_df.columns
-                else []
-            )
         )
 
     @classmethod
     def features(cls, engineered_df: pl.LazyFrame) -> Features:
-        categorical_features: set[str] = {
-            "gender",
-            "hypertension",
-            "heart_disease",
-            "ever_married",
-            "work_type",
-            "residence_type",
-            "smoking_status",
-        }
-
-        cyclical_features: dict[str, float] = {}
-
-        numerical_features: set[str] = {
-            "age",
-            "avg_glucose_level",
-            "bmi",
-        }
-        return Features(
-            categorical_features=categorical_features,
-            cyclical_features=cyclical_features,
-            numerical_features=numerical_features,
+        return get_auto_features(
+            engineered_df,
+            id_column_name=cls.id_column_name,
+            target_column_name=cls.engineered_label_column_name,
         )
 
     id_column_name: ClassVar[str] = "id"
-    raw_label_column_name: ClassVar[str] = "stroke"
+    raw_label_column_name: ClassVar[str] = "Attrition"
     engineered_label_column_name: ClassVar[str] = "classification_target"
 
     @classmethod
@@ -169,7 +131,7 @@ class S03E02ModelCustomization:
         tuner = kt.Hyperband(
             partial(cls.build_model, inputs=inputs),
             objective=kt.Objective("val_auc", direction="max"),
-            max_epochs=10,
+            max_epochs=20,
             factor=3,
             directory=temporary_directory,
             project_name="playground",
@@ -193,7 +155,7 @@ class S03E02ModelCustomization:
         tuner.search(
             train_ds,
             validation_data=valid_ds,
-            epochs=10,
+            epochs=20,
             verbose=1,
             class_weight=class_weight,
             callbacks=callbacks,
@@ -273,7 +235,7 @@ class S03E02ModelCustomization:
         train_ds = tf.data.experimental.make_csv_dataset(
             str(train_file),
             batch_size,
-            label_name="classification_target",
+            label_name=cls.engineered_label_column_name,
             num_epochs=1,
             shuffle=True,
             shuffle_buffer_size=1000,
@@ -283,14 +245,14 @@ class S03E02ModelCustomization:
         valid_ds = tf.data.experimental.make_csv_dataset(
             str(validation_file),
             batch_size,
-            label_name="classification_target",
+            label_name=cls.engineered_label_column_name,
             num_epochs=1,
             shuffle=False,
         )
         train_and_valid_ds = tf.data.experimental.make_csv_dataset(
             [str(train_file), str(validation_file)],
             batch_size,
-            label_name="classification_target",
+            label_name=cls.engineered_label_column_name,
             num_epochs=1,
             shuffle=True,
             shuffle_buffer_size=2000,
@@ -299,7 +261,7 @@ class S03E02ModelCustomization:
         eval_ds = tf.data.experimental.make_csv_dataset(
             str(evaluation_file),
             batch_size,
-            label_name="classification_target",
+            label_name=cls.engineered_label_column_name,
             num_epochs=1,
             shuffle=False,
         )
@@ -308,7 +270,7 @@ class S03E02ModelCustomization:
         inputs_spec: dict[str, tf.TensorSpec]
         inputs_spec, labels_spec = train_ds.element_spec
 
-        input_feature_names = set(inputs_spec) - {"id"}
+        input_feature_names = set(inputs_spec) - {cls.id_column_name}
         inputs = {
             name: tf.keras.layers.Input(shape=(), name=name, dtype=tf.float32)
             for name in input_feature_names
@@ -341,8 +303,8 @@ class S03E02ModelCustomization:
         """Flatten the ground truth labels from a dataset."""
         return tf.cast(tf.concat([y for _, y in ds], axis=0), tf.bool)
 
-    @staticmethod
-    def predict(*, model_directory: Path, input: Path, output: Path) -> None:
+    @classmethod
+    def predict(cls, *, model_directory: Path, input: Path, output: Path) -> None:
         logger.debug("Loading model from %s", model_directory)
         model = tf.keras.models.load_model(model_directory)
         logger.debug("Inference on %s", input)
@@ -353,9 +315,12 @@ class S03E02ModelCustomization:
             shuffle=False,
         )
         logger.debug("Building wrapper model...")
-        id_input = tf.keras.Input(shape=(), name="id", dtype=tf.int64)
-        inputs = {"id": id_input, **model.input}
-        outputs = {"id": id_input, "stroke": tf.squeeze(model.output, axis=-1)}
+        id_input = tf.keras.Input(shape=(), name=cls.id_column_name, dtype=tf.int64)
+        inputs = {cls.id_column_name: id_input, **model.input}
+        outputs = {
+            cls.id_column_name: id_input,
+            cls.raw_label_column_name: tf.squeeze(model.output, axis=-1),
+        }
         wrapper_model = tf.keras.Model(inputs=inputs, outputs=outputs)
         wrapper_model.compile()
 
@@ -367,4 +332,4 @@ class S03E02ModelCustomization:
         logger.debug("Done")
 
 
-model_customization: ModelCustomizationInterface = S03E02ModelCustomization
+model_customization: ModelCustomizationInterface = S03E03ModelCustomization

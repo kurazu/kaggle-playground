@@ -32,19 +32,19 @@
       "yes"
     ]
   },
+  "ever_married": {
+    "type": "categorical",
+    "values": [
+      "No",
+      "Yes"
+    ]
+  },
   "gender": {
     "type": "categorical",
     "values": [
       "Female",
       "Male",
       "Other"
-    ]
-  },
-  "ever_married": {
-    "type": "categorical",
-    "values": [
-      "No",
-      "Yes"
     ]
   },
   "residence_type": {
@@ -59,14 +59,14 @@
     "mean": 89.03985297961319,
     "std": 25.47610198460922
   },
-  "bmi": {
-    "type": "numerical",
-    "mean": 28.11272085729222,
-    "std": 6.722315422227755
-  },
   "age": {
     "type": "numerical",
     "mean": 41.417707788813395,
     "std": 21.44467331631979
+  },
+  "bmi": {
+    "type": "numerical",
+    "mean": 28.11272085729222,
+    "std": 6.722315422227755
   }
 }

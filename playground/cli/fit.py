@@ -35,16 +35,11 @@ def main(
     logger.debug("Scanning raw dataset")
     raw_df = customization.scan_raw_dataset(train_file)
     logger.debug("Engineering features")
-    engineered_df = customization.feature_engineering(
-        raw_df, customization.raw_label_column_name
-    )
+    engineered_df = customization.feature_engineering(raw_df)
+    logger.debug("Getting features config")
+    features = customization.features(engineered_df)
     logger.debug("Fitting feature engineering")
-    configuration = get_feature_config(
-        engineered_df,
-        categorical_features=customization.categorical_features,
-        numerical_features=customization.numerical_features,
-        cyclical_features=customization.cyclical_features,
-    )
+    configuration = get_feature_config(engineered_df, features)
     logger.debug("Saving features config to %s", config_file)
     write_json(
         config_file,

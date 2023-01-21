@@ -1,8 +1,11 @@
 import itertools as it
 import math
-from typing import Dict, Iterable, cast
+import string
+from typing import Callable, Dict, Iterable, cast
 
 import polars as pl
+from returns.curry import partial
+from returns.pipeline import pipe
 from unidecode import unidecode
 
 from .config import (
@@ -12,14 +15,21 @@ from .config import (
     NumericalFeatureConfig,
 )
 
+ALLOWED_CHARS = set(string.ascii_letters) | set(string.digits)
+
+clean_value: Callable[[str], str] = pipe(  # type: ignore
+    str.lower,
+    unidecode,
+    partial(map, lambda c: c if c in ALLOWED_CHARS else "_"),
+    "".join,
+)
+
 
 def get_categorical_feature_expr(
     column_name: str, column_config: CategoricalFeatureConfig
 ) -> Iterable[pl.Expr]:
     for value in column_config["values"]:
-        clean_name = (
-            unidecode(value).replace(" ", "_").replace("/", "_").replace(",", "_")
-        ).lower()
+        clean_name = clean_value(value)
         yield (pl.col(column_name) == value).cast(pl.Float32).alias(
             f"{column_name}__{clean_name}__dummy"
         )

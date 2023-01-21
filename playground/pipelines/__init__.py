@@ -3,20 +3,20 @@ from typing import Protocol, runtime_checkable
 
 import polars as pl
 
+from ..feature_engineering import Features
+
 
 @runtime_checkable
 class ModelCustomizationInterface(Protocol):
     def scan_raw_dataset(self, input_file: Path) -> pl.LazyFrame:
         ...
 
-    def feature_engineering(
-        self, raw_df: pl.LazyFrame, target_column: str
-    ) -> pl.LazyFrame:
+    def feature_engineering(self, raw_df: pl.LazyFrame) -> pl.LazyFrame:
         ...
 
-    categorical_features: set[str]
-    cyclical_features: dict[str, float]
-    numerical_features: set[str]
+    def features(self, engineered_df: pl.LazyFrame) -> Features:
+        ...
+
     raw_label_column_name: str
     engineered_label_column_name: str
     id_column_name: str
