@@ -69,25 +69,36 @@ s03e02/submission.csv: \
 
 # S03E03
 
-s03e03/features.json: \
+s03e03/joined.csv: \
+		s03e03/old_cleaned.csv \
 		s03e03/train_cleaned.csv \
+		playground/cli/join.py
+	poetry run python \
+		-m playground.cli.join \
+		--old-file=s03e03/old_cleaned.csv \
+		--new-file=s03e03/train_cleaned.csv \
+		--output-file=s03e03/joined.csv
+
+s03e03/features.json: \
+		s03e03/joined.csv \
 		playground/pipelines/s03e03.py
 	poetry run python \
 		-m playground.cli.fit \
-		--train-file=s03e03/train_cleaned.csv \
+		--train-file=s03e03/joined.csv \
 		--config-file=s03e03/features.json \
 		--customization=playground.pipelines.s03e03.model_customization
 
 s03e03/train.transformed.csv: \
-		s03e03/train_cleaned.csv \
+		s03e03/joined.csv \
 		s03e03/features.json \
 		playground/pipelines/s03e03.py
 	poetry run python \
 		-m playground.cli.transform \
 		--config-file=s03e03/features.json \
 		--customization=playground.pipelines.s03e03.model_customization \
-		--input-file=s03e03/train_cleaned.csv \
+		--input-file=s03e03/joined.csv \
 		--output-file=s03e03/train.transformed.csv
+
 
 s03e03/test.transformed.csv: \
 		s03e03/test.csv \

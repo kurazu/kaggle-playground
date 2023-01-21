@@ -43,6 +43,7 @@ class S03E03ModelCustomization:
     id_column_name: ClassVar[str] = "id"
     raw_label_column_name: ClassVar[str] = "Attrition"
     engineered_label_column_name: ClassVar[str] = "classification_target"
+    max_epochs: ClassVar[int] = 100
 
     @classmethod
     def get_class_weights(cls, train_file: Path) -> dict[float, float]:
@@ -131,7 +132,7 @@ class S03E03ModelCustomization:
         tuner = kt.Hyperband(
             partial(cls.build_model, inputs=inputs),
             objective=kt.Objective("val_auc", direction="max"),
-            max_epochs=20,
+            max_epochs=cls.max_epochs,
             factor=3,
             directory=temporary_directory,
             project_name="playground",
@@ -155,7 +156,7 @@ class S03E03ModelCustomization:
         tuner.search(
             train_ds,
             validation_data=valid_ds,
-            epochs=20,
+            epochs=cls.max_epochs,
             verbose=1,
             class_weight=class_weight,
             callbacks=callbacks,
@@ -168,7 +169,7 @@ class S03E03ModelCustomization:
         history = model.fit(
             train_ds,
             validation_data=valid_ds,
-            epochs=10,
+            epochs=cls.max_epochs,
             verbose=1,
             class_weight=class_weight,
             callbacks=callbacks,

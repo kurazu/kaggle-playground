@@ -15,6 +15,39 @@
       "Travel_Rarely"
     ]
   },
+  "source": {
+    "type": "categorical",
+    "values": [
+      "new",
+      "old"
+    ]
+  },
+  "EducationField": {
+    "type": "categorical",
+    "values": [
+      "Human Resources",
+      "Life Sciences",
+      "Marketing",
+      "Medical",
+      "Other",
+      "Technical Degree"
+    ]
+  },
+  "OverTime": {
+    "type": "categorical",
+    "values": [
+      "No",
+      "Yes"
+    ]
+  },
+  "Department": {
+    "type": "categorical",
+    "values": [
+      "Human Resources",
+      "Research & Development",
+      "Sales"
+    ]
+  },
   "Gender": {
     "type": "categorical",
     "values": [
@@ -36,145 +69,119 @@
       "Sales Representative"
     ]
   },
-  "EducationField": {
-    "type": "categorical",
-    "values": [
-      "Human Resources",
-      "Life Sciences",
-      "Marketing",
-      "Medical",
-      "Other",
-      "Technical Degree"
-    ]
-  },
-  "Department": {
-    "type": "categorical",
-    "values": [
-      "Human Resources",
-      "Research & Development",
-      "Sales"
-    ]
-  },
-  "OverTime": {
-    "type": "categorical",
-    "values": [
-      "No",
-      "Yes"
-    ]
-  },
-  "Education": {
-    "type": "numerical",
-    "mean": 2.9307462686567165,
-    "std": 0.9969986522174472
-  },
-  "PercentSalaryHike": {
-    "type": "numerical",
-    "mean": 14.906268656716417,
-    "std": 3.421790823054651
-  },
-  "JobSatisfaction": {
-    "type": "numerical",
-    "mean": 2.79044776119403,
-    "std": 1.0972560443530204
-  },
-  "HourlyRate": {
-    "type": "numerical",
-    "mean": 67.79283582089552,
-    "std": 19.446847481257443
-  },
-  "JobLevel": {
-    "type": "numerical",
-    "mean": 1.9988059701492538,
-    "std": 1.0831603423888616
-  },
-  "RelationshipSatisfaction": {
-    "type": "numerical",
-    "mean": 2.7528358208955224,
-    "std": 1.0775414596582376
-  },
-  "MonthlyRate": {
-    "type": "numerical",
-    "mean": 14779.531343283583,
-    "std": 7111.116831725319
-  },
-  "WorkLifeBalance": {
-    "type": "numerical",
-    "mean": 2.76955223880597,
-    "std": 0.6480589362197542
-  },
   "EnvironmentSatisfaction": {
     "type": "numerical",
-    "mean": 2.7582089552238807,
-    "std": 1.0862105786019167
-  },
-  "YearsSinceLastPromotion": {
-    "type": "numerical",
-    "mean": 1.978507462686567,
-    "std": 3.0473391911881054
-  },
-  "StockOptionLevel": {
-    "type": "numerical",
-    "mean": 0.7211940298507463,
-    "std": 0.7716596073050443
-  },
-  "NumCompaniesWorked": {
-    "type": "numerical",
-    "mean": 2.571940298507463,
-    "std": 2.4793148061556454
-  },
-  "Age": {
-    "type": "numerical",
-    "mean": 36.0310447761194,
-    "std": 8.509829360317477
-  },
-  "YearsWithCurrManager": {
-    "type": "numerical",
-    "mean": 4.183283582089552,
-    "std": 3.575498389560622
-  },
-  "YearsInCurrentRole": {
-    "type": "numerical",
-    "mean": 4.142089552238806,
-    "std": 3.582296064471609
-  },
-  "JobInvolvement": {
-    "type": "numerical",
-    "mean": 2.783283582089552,
-    "std": 0.649571102086426
-  },
-  "PerformanceRating": {
-    "type": "numerical",
-    "mean": 3.127761194029851,
-    "std": 0.3339234064639313
+    "mean": 2.7411764705882353,
+    "std": 1.089406199443129
   },
   "MonthlyIncome": {
     "type": "numerical",
-    "mean": 6197.489552238806,
-    "std": 4521.830716140136
+    "mean": 6340.2556438791735,
+    "std": 4611.545682614914
   },
-  "DailyRate": {
+  "Education": {
     "type": "numerical",
-    "mean": 891.1474626865671,
-    "std": 367.2374756835494
+    "mean": 2.9224165341812403,
+    "std": 1.0096653821689903
   },
-  "TotalWorkingYears": {
+  "Age": {
     "type": "numerical",
-    "mean": 10.703880597014926,
-    "std": 7.251627130726049
+    "mean": 36.4483306836248,
+    "std": 8.817593406275876
   },
-  "TrainingTimesLastYear": {
+  "WorkLifeBalance": {
     "type": "numerical",
-    "mean": 2.733134328358209,
-    "std": 1.1457967038201575
+    "mean": 2.7656597774244833,
+    "std": 0.6758961763534668
+  },
+  "JobSatisfaction": {
+    "type": "numerical",
+    "mean": 2.7615262321144676,
+    "std": 1.1001307859570644
   },
   "DistanceFromHome": {
     "type": "numerical",
-    "mean": 8.693134328358209,
-    "std": 7.826305512295684
+    "mean": 8.926550079491255,
+    "std": 7.961301780459987
   },
   "YearsAtCompany": {
     "type": "numerical",
-    "mean": 6.8,
-    "std": 5.877787602216854
+    "mean": 6.897297297297297,
+    "std": 5.995275573905643
+  },
+  "RelationshipSatisfaction": {
+    "type": "numerical",
+    "mean": 2.7338632750397456,
+    "std": 1.0792755617995788
+  },
+  "PercentSalaryHike": {
+    "type": "numerical",
+    "mean": 15.048012718600955,
+    "std": 3.5377710237707727
+  },
+  "YearsWithCurrManager": {
+    "type": "numerical",
+    "mean": 4.1551669316375195,
+    "std": 3.571617269034211
+  },
+  "TotalWorkingYears": {
+    "type": "numerical",
+    "mean": 10.972972972972974,
+    "std": 7.507898781725532
+  },
+  "TrainingTimesLastYear": {
+    "type": "numerical",
+    "mean": 2.7640699523052463,
+    "std": 1.2152209906736402
+  },
+  "NumCompaniesWorked": {
+    "type": "numerical",
+    "mean": 2.628616852146264,
+    "std": 2.4884098054441126
+  },
+  "YearsInCurrentRole": {
+    "type": "numerical",
+    "mean": 4.1828298887122415,
+    "std": 3.601132173450251
+  },
+  "StockOptionLevel": {
+    "type": "numerical",
+    "mean": 0.7551669316375199,
+    "std": 0.810922286431521
+  },
+  "JobInvolvement": {
+    "type": "numerical",
+    "mean": 2.7583465818759936,
+    "std": 0.6796626263781284
+  },
+  "MonthlyRate": {
+    "type": "numerical",
+    "mean": 14561.518918918919,
+    "std": 7116.910316736083
+  },
+  "PerformanceRating": {
+    "type": "numerical",
+    "mean": 3.1399046104928456,
+    "std": 0.34694319963542314
+  },
+  "HourlyRate": {
+    "type": "numerical",
+    "mean": 66.9039745627981,
+    "std": 19.88373490034352
+  },
+  "DailyRate": {
+    "type": "numerical",
+    "mean": 849.706200317965,
+    "std": 387.0919958777404
+  },
+  "JobLevel": {
+    "type": "numerical",
+    "mean": 2.0292527821939585,
+    "std": 1.0946476224406363
+  },
+  "YearsSinceLastPromotion": {
+    "type": "numerical",
+    "mean": 2.0763116057233706,
+    "std": 3.131637237264659
   }
 }
