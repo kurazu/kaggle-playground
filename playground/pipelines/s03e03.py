@@ -10,6 +10,7 @@ from returns.curry import partial
 from sklearn.metrics import roc_auc_score
 
 from ..feature_engineering import Features
+from ..feature_engineering.config import Summary
 from ..feature_engineering.engineering import get_auto_features
 from . import ModelCustomizationInterface
 
@@ -40,6 +41,75 @@ class S03E03ModelCustomization:
                     "MonthlyIncomePerYearsAtCompany"
                 ),
             ]
+        )
+
+    @classmethod
+    def get_summaries(cls, engineered_df: pl.LazyFrame) -> dict[str, Summary]:
+        mean_overtime_per_role = (
+            engineered_df.groupby("JobRole")
+            .agg(
+                [
+                    (pl.col("OverTime") == "Yes")
+                    .mean()
+                    .alias("mean_overtime_per_role"),
+                ]
+            )
+            .collect()
+        )
+        mean_overtime_per_level = (
+            engineered_df.groupby("JobLevel")
+            .agg(
+                [
+                    (pl.col("OverTime") == "Yes")
+                    .mean()
+                    .alias("mean_overtime_per_level"),
+                ]
+            )
+            .collect()
+        )
+        mean_salary_per_role_and_level = (
+            engineered_df.groupby(["JobRole", "JobLevel"])
+            .agg(
+                [
+                    pl.col("MonthlyIncome")
+                    .mean()
+                    .alias("mean_salary_per_role_and_level"),
+                ]
+            )
+            .collect()
+        )
+        return {
+            "mean_overtime_per_role": mean_overtime_per_role.to_dict(as_series=False),
+            "mean_overtime_per_level": mean_overtime_per_level.to_dict(as_series=False),
+            "mean_salary_per_role_and_level": mean_salary_per_role_and_level.to_dict(
+                as_series=False
+            ),
+        }
+
+    @classmethod
+    def apply_summaries(
+        cls, engineered_df: pl.LazyFrame, summaries: dict[str, Summary]
+    ) -> pl.LazyFrame:
+        mean_overtime_per_role = pl.DataFrame(
+            summaries["mean_overtime_per_role"]
+        ).lazy()
+        mean_overtime_per_level = pl.DataFrame(
+            summaries["mean_overtime_per_level"]
+        ).lazy()
+        mean_salary_per_role_and_level = pl.DataFrame(
+            summaries["mean_salary_per_role_and_level"]
+        ).lazy()
+        return (
+            engineered_df.join(mean_overtime_per_role, on="JobRole", how="left")
+            .join(mean_overtime_per_level, on="JobLevel", how="left")
+            .join(
+                mean_salary_per_role_and_level, on=["JobRole", "JobLevel"], how="left"
+            )
+        ).with_column(
+            (
+                (pl.col("MonthlyIncome") - pl.col("mean_salary_per_role_and_level"))
+                / pl.col("mean_salary_per_role_and_level")
+            ).alias("monthly_income_relative")
         )
 
     @classmethod

@@ -10,6 +10,7 @@ from returns.curry import partial
 from sklearn.metrics import roc_auc_score
 
 from ..feature_engineering import Features
+from ..feature_engineering.config import Summary
 from . import ModelCustomizationInterface
 
 logger = logging.getLogger(__name__)
@@ -52,6 +53,16 @@ class S03E02ModelCustomization:
                 else []
             )
         )
+
+    @classmethod
+    def get_summaries(cls, engineered_df: pl.LazyFrame) -> dict[str, Summary]:
+        return {}
+
+    @classmethod
+    def apply_summaries(
+        cls, engineered_df: pl.LazyFrame, summaries: dict[str, Summary]
+    ) -> pl.LazyFrame:
+        return engineered_df
 
     @classmethod
     def features(cls, engineered_df: pl.LazyFrame) -> Features:

@@ -1,202 +1,375 @@
 {
-  "source": {
-    "type": "categorical",
-    "values": [
-      "new",
-      "old"
-    ]
+  "features": {
+    "Age": {
+      "mean": 36.4483306836248,
+      "std": 8.817593406275876,
+      "type": "numerical"
+    },
+    "BusinessTravel": {
+      "type": "categorical",
+      "values": [
+        "Non-Travel",
+        "Travel_Frequently",
+        "Travel_Rarely"
+      ]
+    },
+    "DailyRate": {
+      "mean": 849.706200317965,
+      "std": 387.0919958777404,
+      "type": "numerical"
+    },
+    "Department": {
+      "type": "categorical",
+      "values": [
+        "Human Resources",
+        "Research & Development",
+        "Sales"
+      ]
+    },
+    "DistanceFromHome": {
+      "mean": 8.926550079491255,
+      "std": 7.961301780459987,
+      "type": "numerical"
+    },
+    "Education": {
+      "mean": 2.9224165341812403,
+      "std": 1.0096653821689903,
+      "type": "numerical"
+    },
+    "EducationField": {
+      "type": "categorical",
+      "values": [
+        "Human Resources",
+        "Life Sciences",
+        "Marketing",
+        "Medical",
+        "Other",
+        "Technical Degree"
+      ]
+    },
+    "EnvironmentSatisfaction": {
+      "mean": 2.7411764705882353,
+      "std": 1.089406199443129,
+      "type": "numerical"
+    },
+    "Gender": {
+      "type": "categorical",
+      "values": [
+        "Female",
+        "Male"
+      ]
+    },
+    "HourlyRate": {
+      "mean": 66.9039745627981,
+      "std": 19.88373490034352,
+      "type": "numerical"
+    },
+    "JobInvolvement": {
+      "mean": 2.7583465818759936,
+      "std": 0.6796626263781284,
+      "type": "numerical"
+    },
+    "JobLevel": {
+      "mean": 2.0292527821939585,
+      "std": 1.0946476224406363,
+      "type": "numerical"
+    },
+    "JobRole": {
+      "type": "categorical",
+      "values": [
+        "Healthcare Representative",
+        "Human Resources",
+        "Laboratory Technician",
+        "Manager",
+        "Manufacturing Director",
+        "Research Director",
+        "Research Scientist",
+        "Sales Executive",
+        "Sales Representative"
+      ]
+    },
+    "JobSatisfaction": {
+      "mean": 2.7615262321144676,
+      "std": 1.1001307859570644,
+      "type": "numerical"
+    },
+    "MaritalStatus": {
+      "type": "categorical",
+      "values": [
+        "Divorced",
+        "Married",
+        "Single"
+      ]
+    },
+    "MonthlyIncome": {
+      "mean": 6340.2556438791735,
+      "std": 4611.545682614914,
+      "type": "numerical"
+    },
+    "MonthlyIncomePerAge": {
+      "mean": 169.28152124186215,
+      "std": 101.5401626387106,
+      "type": "numerical"
+    },
+    "MonthlyIncomePerTotalWorkingYears": {
+      "mean": 598.4152541251409,
+      "std": 398.5218175349966,
+      "type": "numerical"
+    },
+    "MonthlyIncomePerYearsAtCompany": {
+      "mean": 1140.933989235215,
+      "std": 1278.4472507673374,
+      "type": "numerical"
+    },
+    "MonthlyRate": {
+      "mean": 14561.518918918919,
+      "std": 7116.910316736083,
+      "type": "numerical"
+    },
+    "NumCompaniesWorked": {
+      "mean": 2.628616852146264,
+      "std": 2.4884098054441126,
+      "type": "numerical"
+    },
+    "OverTime": {
+      "type": "categorical",
+      "values": [
+        "No",
+        "Yes"
+      ]
+    },
+    "PercentSalaryHike": {
+      "mean": 15.048012718600955,
+      "std": 3.5377710237707727,
+      "type": "numerical"
+    },
+    "PerformanceRating": {
+      "mean": 3.1399046104928456,
+      "std": 0.34694319963542314,
+      "type": "numerical"
+    },
+    "RelationshipSatisfaction": {
+      "mean": 2.7338632750397456,
+      "std": 1.0792755617995788,
+      "type": "numerical"
+    },
+    "StockOptionLevel": {
+      "mean": 0.7551669316375199,
+      "std": 0.810922286431521,
+      "type": "numerical"
+    },
+    "TotalWorkingYears": {
+      "mean": 10.972972972972974,
+      "std": 7.507898781725532,
+      "type": "numerical"
+    },
+    "TrainingTimesLastYear": {
+      "mean": 2.7640699523052463,
+      "std": 1.2152209906736402,
+      "type": "numerical"
+    },
+    "WorkLifeBalance": {
+      "mean": 2.7656597774244833,
+      "std": 0.6758961763534668,
+      "type": "numerical"
+    },
+    "YearsAtCompany": {
+      "mean": 6.897297297297297,
+      "std": 5.995275573905643,
+      "type": "numerical"
+    },
+    "YearsInCurrentRole": {
+      "mean": 4.1828298887122415,
+      "std": 3.601132173450251,
+      "type": "numerical"
+    },
+    "YearsSinceLastPromotion": {
+      "mean": 2.0763116057233706,
+      "std": 3.131637237264659,
+      "type": "numerical"
+    },
+    "YearsWithCurrManager": {
+      "mean": 4.1551669316375195,
+      "std": 3.571617269034211,
+      "type": "numerical"
+    },
+    "mean_overtime_per_level": {
+      "mean": 0.2594594594594581,
+      "std": 0.014852977139148871,
+      "type": "numerical"
+    },
+    "mean_overtime_per_role": {
+      "mean": 0.259459459459459,
+      "std": 0.018980123214536418,
+      "type": "numerical"
+    },
+    "mean_salary_per_role_and_level": {
+      "mean": 6340.2556438791735,
+      "std": 4406.250691735394,
+      "type": "numerical"
+    },
+    "monthly_income_relative": {
+      "mean": 9.826974069317264e-18,
+      "std": 0.28116498565472503,
+      "type": "numerical"
+    },
+    "source": {
+      "type": "categorical",
+      "values": [
+        "new",
+        "old"
+      ]
+    }
   },
-  "EducationField": {
-    "type": "categorical",
-    "values": [
-      "Human Resources",
-      "Life Sciences",
-      "Marketing",
-      "Medical",
-      "Other",
-      "Technical Degree"
-    ]
-  },
-  "Gender": {
-    "type": "categorical",
-    "values": [
-      "Female",
-      "Male"
-    ]
-  },
-  "MaritalStatus": {
-    "type": "categorical",
-    "values": [
-      "Divorced",
-      "Married",
-      "Single"
-    ]
-  },
-  "BusinessTravel": {
-    "type": "categorical",
-    "values": [
-      "Non-Travel",
-      "Travel_Frequently",
-      "Travel_Rarely"
-    ]
-  },
-  "OverTime": {
-    "type": "categorical",
-    "values": [
-      "No",
-      "Yes"
-    ]
-  },
-  "JobRole": {
-    "type": "categorical",
-    "values": [
-      "Healthcare Representative",
-      "Human Resources",
-      "Laboratory Technician",
-      "Manager",
-      "Manufacturing Director",
-      "Research Director",
-      "Research Scientist",
-      "Sales Executive",
-      "Sales Representative"
-    ]
-  },
-  "Department": {
-    "type": "categorical",
-    "values": [
-      "Human Resources",
-      "Research & Development",
-      "Sales"
-    ]
-  },
-  "DailyRate": {
-    "type": "numerical",
-    "mean": 849.706200317965,
-    "std": 387.0919958777404
-  },
-  "JobInvolvement": {
-    "type": "numerical",
-    "mean": 2.7583465818759936,
-    "std": 0.6796626263781284
-  },
-  "YearsWithCurrManager": {
-    "type": "numerical",
-    "mean": 4.1551669316375195,
-    "std": 3.571617269034211
-  },
-  "PercentSalaryHike": {
-    "type": "numerical",
-    "mean": 15.048012718600955,
-    "std": 3.5377710237707727
-  },
-  "MonthlyIncome": {
-    "type": "numerical",
-    "mean": 6340.2556438791735,
-    "std": 4611.545682614914
-  },
-  "MonthlyIncomePerAge": {
-    "type": "numerical",
-    "mean": 169.28152124186215,
-    "std": 101.5401626387106
-  },
-  "NumCompaniesWorked": {
-    "type": "numerical",
-    "mean": 2.628616852146264,
-    "std": 2.4884098054441126
-  },
-  "MonthlyRate": {
-    "type": "numerical",
-    "mean": 14561.518918918919,
-    "std": 7116.910316736083
-  },
-  "MonthlyIncomePerYearsAtCompany": {
-    "type": "numerical",
-    "mean": 1140.933989235215,
-    "std": 1278.4472507673374
-  },
-  "DistanceFromHome": {
-    "type": "numerical",
-    "mean": 8.926550079491255,
-    "std": 7.961301780459987
-  },
-  "YearsAtCompany": {
-    "type": "numerical",
-    "mean": 6.897297297297297,
-    "std": 5.995275573905643
-  },
-  "YearsSinceLastPromotion": {
-    "type": "numerical",
-    "mean": 2.0763116057233706,
-    "std": 3.131637237264659
-  },
-  "StockOptionLevel": {
-    "type": "numerical",
-    "mean": 0.7551669316375199,
-    "std": 0.810922286431521
-  },
-  "WorkLifeBalance": {
-    "type": "numerical",
-    "mean": 2.7656597774244833,
-    "std": 0.6758961763534668
-  },
-  "PerformanceRating": {
-    "type": "numerical",
-    "mean": 3.1399046104928456,
-    "std": 0.34694319963542314
-  },
-  "EnvironmentSatisfaction": {
-    "type": "numerical",
-    "mean": 2.7411764705882353,
-    "std": 1.089406199443129
-  },
-  "JobSatisfaction": {
-    "type": "numerical",
-    "mean": 2.7615262321144676,
-    "std": 1.1001307859570644
-  },
-  "Age": {
-    "type": "numerical",
-    "mean": 36.4483306836248,
-    "std": 8.817593406275876
-  },
-  "TrainingTimesLastYear": {
-    "type": "numerical",
-    "mean": 2.7640699523052463,
-    "std": 1.2152209906736402
-  },
-  "Education": {
-    "type": "numerical",
-    "mean": 2.9224165341812403,
-    "std": 1.0096653821689903
-  },
-  "MonthlyIncomePerTotalWorkingYears": {
-    "type": "numerical",
-    "mean": 598.4152541251409,
-    "std": 398.5218175349966
-  },
-  "JobLevel": {
-    "type": "numerical",
-    "mean": 2.0292527821939585,
-    "std": 1.0946476224406363
-  },
-  "TotalWorkingYears": {
-    "type": "numerical",
-    "mean": 10.972972972972974,
-    "std": 7.507898781725532
-  },
-  "HourlyRate": {
-    "type": "numerical",
-    "mean": 66.9039745627981,
-    "std": 19.88373490034352
-  },
-  "RelationshipSatisfaction": {
-    "type": "numerical",
-    "mean": 2.7338632750397456,
-    "std": 1.0792755617995788
-  },
-  "YearsInCurrentRole": {
-    "type": "numerical",
-    "mean": 4.1828298887122415,
-    "std": 3.601132173450251
+  "summaries": {
+    "mean_overtime_per_level": {
+      "JobLevel": [
+        7,
+        5,
+        4,
+        3,
+        2,
+        1
+      ],
+      "mean_overtime_per_level": [
+        0.0,
+        0.2569444444444444,
+        0.27,
+        0.28982300884955753,
+        0.2467419635099913,
+        0.25898078529657476
+      ]
+    },
+    "mean_overtime_per_role": {
+      "JobRole": [
+        "Laboratory Technician",
+        "Research Scientist",
+        "Manager",
+        "Healthcare Representative",
+        "Sales Executive",
+        "Manufacturing Director",
+        "Sales Representative",
+        "Human Resources",
+        "Research Director"
+      ],
+      "mean_overtime_per_role": [
+        0.23648648648648649,
+        0.28144654088050314,
+        0.26291079812206575,
+        0.26666666666666666,
+        0.2745961820851689,
+        0.23460410557184752,
+        0.23125,
+        0.2558139534883721,
+        0.2582781456953642
+      ]
+    },
+    "mean_salary_per_role_and_level": {
+      "JobLevel": [
+        4,
+        4,
+        2,
+        3,
+        1,
+        4,
+        2,
+        2,
+        1,
+        3,
+        1,
+        3,
+        7,
+        3,
+        2,
+        1,
+        2,
+        3,
+        2,
+        3,
+        1,
+        3,
+        5,
+        5,
+        1,
+        1,
+        1,
+        4,
+        2,
+        5,
+        4,
+        2,
+        3
+      ],
+      "JobRole": [
+        "Research Director",
+        "Manager",
+        "Healthcare Representative",
+        "Human Resources",
+        "Human Resources",
+        "Sales Executive",
+        "Manufacturing Director",
+        "Laboratory Technician",
+        "Sales Representative",
+        "Laboratory Technician",
+        "Healthcare Representative",
+        "Manufacturing Director",
+        "Manufacturing Director",
+        "Healthcare Representative",
+        "Human Resources",
+        "Laboratory Technician",
+        "Sales Representative",
+        "Manager",
+        "Research Scientist",
+        "Research Director",
+        "Sales Executive",
+        "Sales Executive",
+        "Manager",
+        "Research Director",
+        "Manager",
+        "Research Director",
+        "Research Scientist",
+        "Manufacturing Director",
+        "Sales Executive",
+        "Research Scientist",
+        "Healthcare Representative",
+        "Manager",
+        "Research Scientist"
+      ],
+      "mean_salary_per_role_and_level": [
+        16569.145833333332,
+        16189.376344086022,
+        5846.136094674556,
+        9393.9,
+        2682.703703703704,
+        12915.538461538461,
+        5564.030837004405,
+        4412.225,
+        2784.7908496732025,
+        8221.5,
+        1223.0,
+        9117.886597938144,
+        5326.0,
+        9095.510204081633,
+        5609.818181818182,
+        2898.9570815450643,
+        3921.0,
+        11655.666666666666,
+        4933.570175438596,
+        12232.5,
+        5229.666666666667,
+        9188.782608695652,
+        19083.90425531915,
+        18824.041666666668,
+        1416.0,
+        1878.0,
+        2861.841698841699,
+        13654.4375,
+        5768.346232179226,
+        19742.5,
+        13245.941176470587,
+        5208.0,
+        11484.5
+      ]
+    }
   }
 }

@@ -4,6 +4,7 @@ from typing import Protocol, runtime_checkable
 import polars as pl
 
 from ..feature_engineering import Features
+from ..feature_engineering.config import Summary
 
 
 @runtime_checkable
@@ -12,6 +13,14 @@ class ModelCustomizationInterface(Protocol):
         ...
 
     def feature_engineering(self, raw_df: pl.LazyFrame) -> pl.LazyFrame:
+        ...
+
+    def get_summaries(self, engineered_df: pl.LazyFrame) -> dict[str, Summary]:
+        ...
+
+    def apply_summaries(
+        self, engineered_df: pl.LazyFrame, summaries: dict[str, Summary]
+    ) -> pl.LazyFrame:
         ...
 
     def features(self, engineered_df: pl.LazyFrame) -> Features:

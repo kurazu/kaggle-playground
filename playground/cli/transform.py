@@ -3,7 +3,7 @@ from pathlib import Path
 
 import click
 
-from ..feature_engineering.config import FeatureConfig
+from ..feature_engineering.config import Configuration
 from ..feature_engineering.transform import transform_engineered
 from ..logs import setup_logging
 from ..pipelines import load_customization
@@ -50,10 +50,13 @@ def main(
     )
     raw_df = customization.scan_raw_dataset(input_file)
     engineered_df = customization.feature_engineering(raw_df)
-    configuration: dict[str, FeatureConfig] = read_json(config_file)
+    configuration: Configuration = read_json(config_file)
+    engineered_df = customization.apply_summaries(
+        engineered_df, summaries=configuration["summaries"]
+    )
     transformed_df = transform_engineered(
         engineered_df,
-        configuration,
+        configuration["features"],
         customization.engineered_label_column_name in engineered_df.columns,
     )
     materialized_df = transformed_df.collect()

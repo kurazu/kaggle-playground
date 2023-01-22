@@ -3,6 +3,7 @@ from pathlib import Path
 
 import click
 
+from ..feature_engineering.config import Configuration
 from ..feature_engineering.engineering import get_feature_config
 from ..logs import setup_logging
 from ..pipelines import load_customization
@@ -36,11 +37,19 @@ def main(
     raw_df = customization.scan_raw_dataset(train_file)
     logger.debug("Engineering features")
     engineered_df = customization.feature_engineering(raw_df)
+    logger.debug("Engineering summaries")
+    summaries = customization.get_summaries(engineered_df)
+    logger.debug("Applying summaries")
+    engineered_df = customization.apply_summaries(engineered_df, summaries)
     logger.debug("Getting features config")
     features = customization.features(engineered_df)
     logger.debug("Fitting feature engineering")
-    configuration = get_feature_config(engineered_df, features)
-    logger.debug("Saving features config to %s", config_file)
+    features_configuration = get_feature_config(engineered_df, features)
+    logger.debug("Saving config to %s", config_file)
+    configuration: Configuration = {
+        "features": features_configuration,
+        "summaries": summaries,
+    }
     write_json(
         config_file,
         configuration,

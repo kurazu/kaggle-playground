@@ -10,4 +10,4 @@ def read_json(path: Path) -> Any:
 
 def write_json(path: Path, obj: Any) -> None:
     with path.open("w", encoding="utf-8") as f:
-        json.dump(obj, f, indent=2)
+        json.dump(obj, f, indent=2, sort_keys=True)

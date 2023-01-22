@@ -1,4 +1,6 @@
-from typing import List, Literal, TypedDict, Union
+from typing import Any, List, Literal, TypedDict, Union
+
+Summary = dict[str, list[Any]]
 
 
 class CategoricalFeatureConfig(TypedDict):
@@ -20,3 +22,8 @@ class CyclicalFeatureConfig(TypedDict):
 FeatureConfig = Union[
     CategoricalFeatureConfig, NumericalFeatureConfig, CyclicalFeatureConfig
 ]
+
+
+class Configuration(TypedDict):
+    features: dict[str, FeatureConfig]
+    summaries: dict[str, Summary]
