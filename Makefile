@@ -99,16 +99,25 @@ s03e03/train.transformed.csv: \
 		--input-file=s03e03/joined.csv \
 		--output-file=s03e03/train.transformed.csv
 
+s03e03/test.augmented.csv: \
+		s03e03/test.csv \
+		playground/cli/augment.py
+	poetry run python \
+		-m playground.cli.augment \
+		--input-file=s03e03/test.csv \
+		--output-file=s03e03/test.augmented.csv \
+		--column-name=source \
+		--column-value=new
 
 s03e03/test.transformed.csv: \
-		s03e03/test.csv \
+		s03e03/test.augmented.csv \
 		s03e03/features.json \
 		playground/pipelines/s03e03.py
 	poetry run python \
 		-m playground.cli.transform \
 		--config-file=s03e03/features.json \
 		--customization=playground.pipelines.s03e03.model_customization \
-		--input-file=s03e03/test.csv \
+		--input-file=s03e03/test.augmented.csv \
 		--output-file=s03e03/test.transformed.csv
 
 s03e03/split.train.csv s03e03/split.valid.csv s03e03/split.eval.csv: \
