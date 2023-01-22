@@ -1,20 +1,4 @@
 {
-  "MaritalStatus": {
-    "type": "categorical",
-    "values": [
-      "Divorced",
-      "Married",
-      "Single"
-    ]
-  },
-  "BusinessTravel": {
-    "type": "categorical",
-    "values": [
-      "Non-Travel",
-      "Travel_Frequently",
-      "Travel_Rarely"
-    ]
-  },
   "source": {
     "type": "categorical",
     "values": [
@@ -33,26 +17,34 @@
       "Technical Degree"
     ]
   },
-  "OverTime": {
-    "type": "categorical",
-    "values": [
-      "No",
-      "Yes"
-    ]
-  },
-  "Department": {
-    "type": "categorical",
-    "values": [
-      "Human Resources",
-      "Research & Development",
-      "Sales"
-    ]
-  },
   "Gender": {
     "type": "categorical",
     "values": [
       "Female",
       "Male"
+    ]
+  },
+  "MaritalStatus": {
+    "type": "categorical",
+    "values": [
+      "Divorced",
+      "Married",
+      "Single"
+    ]
+  },
+  "BusinessTravel": {
+    "type": "categorical",
+    "values": [
+      "Non-Travel",
+      "Travel_Frequently",
+      "Travel_Rarely"
+    ]
+  },
+  "OverTime": {
+    "type": "categorical",
+    "values": [
+      "No",
+      "Yes"
     ]
   },
   "JobRole": {
@@ -69,35 +61,58 @@
       "Sales Representative"
     ]
   },
-  "EnvironmentSatisfaction": {
+  "Department": {
+    "type": "categorical",
+    "values": [
+      "Human Resources",
+      "Research & Development",
+      "Sales"
+    ]
+  },
+  "DailyRate": {
     "type": "numerical",
-    "mean": 2.7411764705882353,
-    "std": 1.089406199443129
+    "mean": 849.706200317965,
+    "std": 387.0919958777404
+  },
+  "JobInvolvement": {
+    "type": "numerical",
+    "mean": 2.7583465818759936,
+    "std": 0.6796626263781284
+  },
+  "YearsWithCurrManager": {
+    "type": "numerical",
+    "mean": 4.1551669316375195,
+    "std": 3.571617269034211
+  },
+  "PercentSalaryHike": {
+    "type": "numerical",
+    "mean": 15.048012718600955,
+    "std": 3.5377710237707727
   },
   "MonthlyIncome": {
     "type": "numerical",
     "mean": 6340.2556438791735,
     "std": 4611.545682614914
   },
-  "Education": {
+  "MonthlyIncomePerAge": {
     "type": "numerical",
-    "mean": 2.9224165341812403,
-    "std": 1.0096653821689903
+    "mean": 169.28152124186215,
+    "std": 101.5401626387106
   },
-  "Age": {
+  "NumCompaniesWorked": {
     "type": "numerical",
-    "mean": 36.4483306836248,
-    "std": 8.817593406275876
+    "mean": 2.628616852146264,
+    "std": 2.4884098054441126
   },
-  "WorkLifeBalance": {
+  "MonthlyRate": {
     "type": "numerical",
-    "mean": 2.7656597774244833,
-    "std": 0.6758961763534668
+    "mean": 14561.518918918919,
+    "std": 7116.910316736083
   },
-  "JobSatisfaction": {
+  "MonthlyIncomePerYearsAtCompany": {
     "type": "numerical",
-    "mean": 2.7615262321144676,
-    "std": 1.1001307859570644
+    "mean": 1140.933989235215,
+    "std": 1278.4472507673374
   },
   "DistanceFromHome": {
     "type": "numerical",
@@ -109,79 +124,79 @@
     "mean": 6.897297297297297,
     "std": 5.995275573905643
   },
-  "RelationshipSatisfaction": {
+  "YearsSinceLastPromotion": {
     "type": "numerical",
-    "mean": 2.7338632750397456,
-    "std": 1.0792755617995788
-  },
-  "PercentSalaryHike": {
-    "type": "numerical",
-    "mean": 15.048012718600955,
-    "std": 3.5377710237707727
-  },
-  "YearsWithCurrManager": {
-    "type": "numerical",
-    "mean": 4.1551669316375195,
-    "std": 3.571617269034211
-  },
-  "TotalWorkingYears": {
-    "type": "numerical",
-    "mean": 10.972972972972974,
-    "std": 7.507898781725532
-  },
-  "TrainingTimesLastYear": {
-    "type": "numerical",
-    "mean": 2.7640699523052463,
-    "std": 1.2152209906736402
-  },
-  "NumCompaniesWorked": {
-    "type": "numerical",
-    "mean": 2.628616852146264,
-    "std": 2.4884098054441126
-  },
-  "YearsInCurrentRole": {
-    "type": "numerical",
-    "mean": 4.1828298887122415,
-    "std": 3.601132173450251
+    "mean": 2.0763116057233706,
+    "std": 3.131637237264659
   },
   "StockOptionLevel": {
     "type": "numerical",
     "mean": 0.7551669316375199,
     "std": 0.810922286431521
   },
-  "JobInvolvement": {
+  "WorkLifeBalance": {
     "type": "numerical",
-    "mean": 2.7583465818759936,
-    "std": 0.6796626263781284
-  },
-  "MonthlyRate": {
-    "type": "numerical",
-    "mean": 14561.518918918919,
-    "std": 7116.910316736083
+    "mean": 2.7656597774244833,
+    "std": 0.6758961763534668
   },
   "PerformanceRating": {
     "type": "numerical",
     "mean": 3.1399046104928456,
     "std": 0.34694319963542314
   },
-  "HourlyRate": {
+  "EnvironmentSatisfaction": {
     "type": "numerical",
-    "mean": 66.9039745627981,
-    "std": 19.88373490034352
+    "mean": 2.7411764705882353,
+    "std": 1.089406199443129
   },
-  "DailyRate": {
+  "JobSatisfaction": {
     "type": "numerical",
-    "mean": 849.706200317965,
-    "std": 387.0919958777404
+    "mean": 2.7615262321144676,
+    "std": 1.1001307859570644
+  },
+  "Age": {
+    "type": "numerical",
+    "mean": 36.4483306836248,
+    "std": 8.817593406275876
+  },
+  "TrainingTimesLastYear": {
+    "type": "numerical",
+    "mean": 2.7640699523052463,
+    "std": 1.2152209906736402
+  },
+  "Education": {
+    "type": "numerical",
+    "mean": 2.9224165341812403,
+    "std": 1.0096653821689903
+  },
+  "MonthlyIncomePerTotalWorkingYears": {
+    "type": "numerical",
+    "mean": 598.4152541251409,
+    "std": 398.5218175349966
   },
   "JobLevel": {
     "type": "numerical",
     "mean": 2.0292527821939585,
     "std": 1.0946476224406363
   },
-  "YearsSinceLastPromotion": {
+  "TotalWorkingYears": {
     "type": "numerical",
-    "mean": 2.0763116057233706,
-    "std": 3.131637237264659
+    "mean": 10.972972972972974,
+    "std": 7.507898781725532
+  },
+  "HourlyRate": {
+    "type": "numerical",
+    "mean": 66.9039745627981,
+    "std": 19.88373490034352
+  },
+  "RelationshipSatisfaction": {
+    "type": "numerical",
+    "mean": 2.7338632750397456,
+    "std": 1.0792755617995788
+  },
+  "YearsInCurrentRole": {
+    "type": "numerical",
+    "mean": 4.1828298887122415,
+    "std": 3.601132173450251
   }
 }

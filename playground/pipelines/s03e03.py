@@ -30,6 +30,16 @@ class S03E03ModelCustomization:
                 else pl.col(column_name)
                 for column_name in raw_df.columns
             ]
+        ).with_columns(
+            [
+                (pl.col("MonthlyIncome") / pl.col("Age")).alias("MonthlyIncomePerAge"),
+                (pl.col("MonthlyIncome") / (pl.col("TotalWorkingYears") + 1)).alias(
+                    "MonthlyIncomePerTotalWorkingYears"
+                ),
+                (pl.col("MonthlyIncome") / (pl.col("YearsAtCompany") + 1)).alias(
+                    "MonthlyIncomePerYearsAtCompany"
+                ),
+            ]
         )
 
     @classmethod
@@ -43,7 +53,7 @@ class S03E03ModelCustomization:
     id_column_name: ClassVar[str] = "id"
     raw_label_column_name: ClassVar[str] = "Attrition"
     engineered_label_column_name: ClassVar[str] = "classification_target"
-    max_epochs: ClassVar[int] = 100
+    max_epochs: ClassVar[int] = 20
 
     @classmethod
     def get_class_weights(cls, train_file: Path) -> dict[float, float]:
