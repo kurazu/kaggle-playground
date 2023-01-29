@@ -57,7 +57,10 @@ def main(
     transformed_df = transform_engineered(
         engineered_df,
         configuration["features"],
-        customization.engineered_label_column_name in engineered_df.columns,
+        id_column_name=customization.id_column_name,
+        label_column_name=customization.engineered_label_column_name
+        if (customization.engineered_label_column_name in engineered_df.columns)
+        else None,
     )
     materialized_df = transformed_df.collect()
     materialized_df.write_csv(output_file)

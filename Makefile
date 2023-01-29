@@ -155,3 +155,25 @@ s03e03/submission.csv: \
 		--input-file=s03e03/test.transformed.csv \
 		--output-file=s03e03/submission.csv \
 		--model-dir=s03e03/saved_model
+
+# S03E04
+
+s03e04/features.json: \
+		s03e04/train.csv \
+		playground/pipelines/s03e04.py
+	poetry run python \
+		-m playground.cli.fit \
+		--train-file=s03e04/train.csv \
+		--config-file=s03e04/features.json \
+		--customization=playground.pipelines.s03e04.model_customization
+
+s03e04/train.transformed.csv: \
+		s03e04/train.csv \
+		s03e04/features.json \
+		playground/pipelines/s03e04.py
+	poetry run python \
+		-m playground.cli.transform \
+		--config-file=s03e04/features.json \
+		--customization=playground.pipelines.s03e04.model_customization \
+		--input-file=s03e04/train.csv \
+		--output-file=s03e04/train.transformed.csv

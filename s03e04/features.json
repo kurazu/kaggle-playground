@@ -1,0 +1,114 @@
+{
+  "features": {
+    "count_100": {
+      "mean": 7.631504730090494,
+      "std": 8.968310426687845,
+      "type": "numerical"
+    },
+    "count_1000": {
+      "mean": 13.681566565812831,
+      "std": 13.331280173629256,
+      "type": "numerical"
+    },
+    "count_200": {
+      "mean": 7.631600564051312,
+      "std": 8.96832784844221,
+      "type": "numerical"
+    },
+    "count_50": {
+      "mean": 7.631299371603029,
+      "std": 8.968266621089164,
+      "type": "numerical"
+    },
+    "count_500": {
+      "mean": 7.631742033231567,
+      "std": 8.968406678374137,
+      "type": "numerical"
+    },
+    "pca_1": {
+      "type": "passthrough"
+    },
+    "pca_10": {
+      "type": "passthrough"
+    },
+    "pca_11": {
+      "type": "passthrough"
+    },
+    "pca_12": {
+      "type": "passthrough"
+    },
+    "pca_13": {
+      "type": "passthrough"
+    },
+    "pca_14": {
+      "type": "passthrough"
+    },
+    "pca_15": {
+      "type": "passthrough"
+    },
+    "pca_16": {
+      "type": "passthrough"
+    },
+    "pca_17": {
+      "type": "passthrough"
+    },
+    "pca_18": {
+      "type": "passthrough"
+    },
+    "pca_19": {
+      "type": "passthrough"
+    },
+    "pca_2": {
+      "type": "passthrough"
+    },
+    "pca_20": {
+      "type": "passthrough"
+    },
+    "pca_21": {
+      "type": "passthrough"
+    },
+    "pca_22": {
+      "type": "passthrough"
+    },
+    "pca_23": {
+      "type": "passthrough"
+    },
+    "pca_24": {
+      "type": "passthrough"
+    },
+    "pca_25": {
+      "type": "passthrough"
+    },
+    "pca_26": {
+      "type": "passthrough"
+    },
+    "pca_27": {
+      "type": "passthrough"
+    },
+    "pca_28": {
+      "type": "passthrough"
+    },
+    "pca_3": {
+      "type": "passthrough"
+    },
+    "pca_4": {
+      "type": "passthrough"
+    },
+    "pca_5": {
+      "type": "passthrough"
+    },
+    "pca_6": {
+      "type": "passthrough"
+    },
+    "pca_7": {
+      "type": "passthrough"
+    },
+    "pca_8": {
+      "type": "passthrough"
+    },
+    "pca_9": {
+      "type": "passthrough"
+    }
+  },
+  "summaries": {}
+}

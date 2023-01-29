@@ -3,6 +3,10 @@ from typing import Any, List, Literal, TypedDict, Union
 Summary = dict[str, list[Any]]
 
 
+class PassThroughFeatureConfig(TypedDict):
+    type: Literal["passthrough"]
+
+
 class CategoricalFeatureConfig(TypedDict):
     type: Literal["categorical"]
     values: List[str]
@@ -20,7 +24,10 @@ class CyclicalFeatureConfig(TypedDict):
 
 
 FeatureConfig = Union[
-    CategoricalFeatureConfig, NumericalFeatureConfig, CyclicalFeatureConfig
+    PassThroughFeatureConfig,
+    CategoricalFeatureConfig,
+    NumericalFeatureConfig,
+    CyclicalFeatureConfig,
 ]
 
 

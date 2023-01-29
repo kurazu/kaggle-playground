@@ -53,6 +53,11 @@ def get_feature_config(
             "period": period,
         }
 
+    for column_name in features.passthrough_features:
+        config[column_name] = {
+            "type": "passthrough",
+        }
+
     return config
 
 
@@ -76,6 +81,7 @@ def get_auto_features(
         else:
             numerical_features.add(column_name)
     return Features(
+        passthrough_features=set(),
         categorical_features=categorical_features,
         numerical_features=numerical_features,
         cyclical_features=cyclical_features,

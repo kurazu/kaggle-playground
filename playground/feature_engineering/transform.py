@@ -13,6 +13,7 @@ from .config import (
     CyclicalFeatureConfig,
     FeatureConfig,
     NumericalFeatureConfig,
+    PassThroughFeatureConfig,
 )
 
 ALLOWED_CHARS = set(string.ascii_letters) | set(string.digits)
@@ -56,6 +57,12 @@ def get_cyclical_feature_expr(
     yield cos_expr.alias(f"{column_name}__cos")
 
 
+def get_passthrough_feature_expr(
+    column_name: str, column_config: PassThroughFeatureConfig
+) -> Iterable[pl.Expr]:
+    yield pl.col(column_name).alias(f"{column_name}__passthrough")
+
+
 def get_exprs(column_name: str, column_config: FeatureConfig) -> Iterable[pl.Expr]:
     type = column_config["type"]
     if type == "categorical":
@@ -65,6 +72,10 @@ def get_exprs(column_name: str, column_config: FeatureConfig) -> Iterable[pl.Exp
     elif type == "numerical":
         yield from get_numerical_feature_expr(
             column_name, cast(NumericalFeatureConfig, column_config)
+        )
+    elif type == "passthrough":
+        yield from get_passthrough_feature_expr(
+            column_name, cast(PassThroughFeatureConfig, column_config)
         )
     else:
         assert type == "cyclical"
@@ -76,7 +87,9 @@ def get_exprs(column_name: str, column_config: FeatureConfig) -> Iterable[pl.Exp
 def transform_engineered(
     engineered_df: pl.LazyFrame,
     config: Dict[str, FeatureConfig],
-    has_target: bool,
+    *,
+    id_column_name: str,
+    label_column_name: str | None,
 ) -> pl.LazyFrame:
     """
     Transform the feature engineered dataset into a dataset of
@@ -84,10 +97,10 @@ def transform_engineered(
     """
 
     expressions = it.chain.from_iterable(it.starmap(get_exprs, config.items()))
-    expressions = it.chain([pl.col("id")], expressions)
-    if has_target:
+    expressions = it.chain([pl.col(id_column_name)], expressions)
+    if label_column_name is not None:
         expressions = it.chain(
-            expressions, [pl.col("classification_target").cast(pl.Float32)]
+            expressions, [pl.col(label_column_name).cast(pl.Float32)]
         )
 
     return engineered_df.select(list(expressions))
