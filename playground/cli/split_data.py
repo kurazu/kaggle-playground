@@ -68,7 +68,7 @@ def main(
     customization = load_customization(customization_importable_name)
     df = customization.scan_raw_dataset(input_file)
     ids, labels = df.select(
-        ["id", customization.engineered_label_column_name]
+        [customization.id_column_name, customization.engineered_label_column_name]
     ).collect()
     train_ids, rest_ids, train_labels, rest_labels = train_test_split(
         ids,
@@ -90,15 +90,17 @@ def main(
         len(validation_ids),
         len(evaluation_ids),
     )
-    df.filter(pl.col("id").is_in(train_ids)).collect().write_csv(train_output_file)
+    df.filter(
+        pl.col(customization.id_column_name).is_in(train_ids)
+    ).collect().write_csv(train_output_file)
     logger.debug("Written train samples to %s", train_output_file)
-    df.filter(pl.col("id").is_in(validation_ids)).collect().write_csv(
-        validation_output_file
-    )
+    df.filter(
+        pl.col(customization.id_column_name).is_in(validation_ids)
+    ).collect().write_csv(validation_output_file)
     logger.debug("Written validation samples to %s", validation_output_file)
-    df.filter(pl.col("id").is_in(evaluation_ids)).collect().write_csv(
-        evaluation_output_file
-    )
+    df.filter(
+        pl.col(customization.id_column_name).is_in(evaluation_ids)
+    ).collect().write_csv(evaluation_output_file)
     logger.debug("Written evaluation samples to %s", evaluation_output_file)
 
 

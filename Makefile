@@ -158,22 +158,116 @@ s03e03/submission.csv: \
 
 # S03E04
 
-s03e04/features.json: \
+s03e04/train.augmented.csv: \
 		s03e04/train.csv \
+		playground/cli/augment.py
+	poetry run python \
+		-m playground.cli.augment \
+		--input-file=s03e04/train.csv \
+		--output-file=s03e04/train.augmented.csv \
+		--column-name=source \
+		--column-value=old
+
+s03e04/features.json: \
+		s03e04/train.augmented.csv \
 		playground/pipelines/s03e04.py
 	poetry run python \
 		-m playground.cli.fit \
-		--train-file=s03e04/train.csv \
+		--train-file=s03e04/train.augmented.csv \
 		--config-file=s03e04/features.json \
 		--customization=playground.pipelines.s03e04.model_customization
 
-s03e04/train.transformed.csv: \
-		s03e04/train.csv \
+s03e04/train.augmented_transformed.csv: \
+		s03e04/train.augmented.csv \
 		s03e04/features.json \
 		playground/pipelines/s03e04.py
 	poetry run python \
 		-m playground.cli.transform \
 		--config-file=s03e04/features.json \
 		--customization=playground.pipelines.s03e04.model_customization \
-		--input-file=s03e04/train.csv \
-		--output-file=s03e04/train.transformed.csv
+		--input-file=s03e04/train.augmented.csv \
+		--output-file=s03e04/train.augmented_transformed.csv
+
+s03e04/train.transformed.csv: \
+		s03e04/train.augmented_transformed.csv
+	poetry run python \
+		-m playground.cli.drop_column \
+		--input-file=s03e04/train.augmented_transformed.csv \
+		--output-file=s03e04/train.transformed.csv \
+		--column=source__passthrough
+
+s03e04/split.train.csv s03e04/split.valid.csv s03e04/split.eval.csv: \
+		s03e04/train.transformed.csv \
+		playground/cli/split_data.py \
+		playground/pipelines/s03e04.py
+	poetry run python \
+		-m playground.cli.split_data \
+		--input-file=s03e04/train.transformed.csv \
+		--train-output-file=s03e04/split.train.csv \
+		--validation-output-file=s03e04/split.valid.csv \
+		--evaluation-output-file=s03e04/split.eval.csv \
+		--customization=playground.pipelines.s03e04.model_customization
+
+s03e04/saved_model: \
+		s03e04/split.train.csv \
+		s03e04/split.valid.csv \
+		s03e04/split.eval.csv \
+		playground/pipelines/s03e04.py
+	poetry run python \
+		-m playground.cli.train \
+		--customization=playground.pipelines.s03e04.model_customization \
+		--train-file=s03e04/split.train.csv \
+		--validation-file=s03e04/split.valid.csv \
+		--evaluation-file=s03e04/split.eval.csv \
+		--output-dir=s03e04/saved_model
+
+s03e04/train_test.joined.csv: \
+		s03e04/train.csv \
+		s03e04/test.csv \
+		playground/cli/join.py
+	poetry run python \
+		-m playground.cli.join \
+		--old-file=s03e04/train.csv \
+		--new-file=s03e04/test.csv \
+		--output-file=s03e04/train_test.joined.csv
+
+s03e04/train_test.transformed.csv: \
+		s03e04/train_test.joined.csv \
+		s03e04/features.json \
+		playground/pipelines/s03e04.py
+	poetry run python \
+		-m playground.cli.transform \
+		--config-file=s03e04/features.json \
+		--customization=playground.pipelines.s03e04.model_customization \
+		--input-file=s03e04/train_test.joined.csv \
+		--output-file=s03e04/train_test.transformed.csv
+
+
+s03e04/test.augmented_transformed.csv: \
+		s03e04/train_test.transformed.csv \
+		playground/cli/filter.py
+	poetry run python \
+		-m playground.cli.filter \
+		--input-file=s03e04/train_test.transformed.csv \
+		--output-file=s03e04/test.augmented_transformed.csv \
+		--column=source__passthrough \
+		--value=new
+
+s03e04/test.transformed.csv: \
+		s03e04/test.augmented_transformed.csv
+	poetry run python \
+		-m playground.cli.drop_column \
+		--input-file=s03e04/test.augmented_transformed.csv \
+		--output-file=s03e04/test.transformed.csv \
+		--column=source__passthrough
+
+s03e04/submission.csv: \
+		s03e04/test.transformed.csv \
+		s03e04/saved_model \
+		playground/pipelines/s03e04.py
+	poetry run python \
+		-m playground.cli.predict \
+		--customization=playground.pipelines.s03e04.model_customization \
+		--input-file=s03e04/test.transformed.csv \
+		--output-file=s03e04/submission.csv \
+		--model-dir=s03e04/saved_model

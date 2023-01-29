@@ -1,5 +1,10 @@
 {
   "features": {
+    "amount": {
+      "mean": 66.35980261407096,
+      "std": 150.7950165451664,
+      "type": "numerical"
+    },
     "count_100": {
       "mean": 7.631504730090494,
       "std": 8.968310426687845,
@@ -108,6 +113,13 @@
     },
     "pca_9": {
       "type": "passthrough"
+    },
+    "source": {
+      "type": "passthrough"
+    },
+    "time": {
+      "period": 86400,
+      "type": "cyclical"
     }
   },
   "summaries": {}

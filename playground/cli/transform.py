@@ -42,7 +42,7 @@ def main(
     output_file: Path,
 ) -> None:
     customization = load_customization(customization_importable_name)
-    logger.info(
+    logger.debug(
         "Transforming file %s with config %s and writing to %s",
         input_file,
         config_file,
@@ -58,11 +58,12 @@ def main(
         engineered_df,
         configuration["features"],
         id_column_name=customization.id_column_name,
-        label_column_name=customization.engineered_label_column_name
-        if (customization.engineered_label_column_name in engineered_df.columns)
+        engineered_label_column_name=customization.engineered_label_column_name
+        if (customization.engineered_label_column_name in engineered_df)
         else None,
     )
     materialized_df = transformed_df.collect()
+    logger.debug("Writing materialized dataframe to %s", output_file)
     materialized_df.write_csv(output_file)
     logger.info("Done")
 

@@ -89,7 +89,7 @@ def transform_engineered(
     config: Dict[str, FeatureConfig],
     *,
     id_column_name: str,
-    label_column_name: str | None,
+    engineered_label_column_name: str | None,
 ) -> pl.LazyFrame:
     """
     Transform the feature engineered dataset into a dataset of
@@ -98,9 +98,14 @@ def transform_engineered(
 
     expressions = it.chain.from_iterable(it.starmap(get_exprs, config.items()))
     expressions = it.chain([pl.col(id_column_name)], expressions)
-    if label_column_name is not None:
+    if engineered_label_column_name is not None:
         expressions = it.chain(
-            expressions, [pl.col(label_column_name).cast(pl.Float32)]
+            expressions,
+            [
+                pl.col(engineered_label_column_name)
+                .cast(pl.Float32)
+                .alias(engineered_label_column_name)
+            ],
         )
 
     return engineered_df.select(list(expressions))
