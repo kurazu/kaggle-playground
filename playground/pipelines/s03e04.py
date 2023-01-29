@@ -42,7 +42,7 @@ def count_timestamps(series: Iterable[datetime], period: timedelta) -> Iterable[
 class S03E04ModelCustomization:
     @classmethod
     def scan_raw_dataset(cls, input_file: Path) -> pl.LazyFrame:
-        return pl.scan_csv(input_file)
+        return pl.scan_csv(input_file, dtypes={"Time": pl.Float32, "id": pl.Int64})
 
     @classmethod
     def feature_engineering(cls, raw_df: pl.LazyFrame) -> pl.LazyFrame:
@@ -68,7 +68,8 @@ class S03E04ModelCustomization:
         other_features = [
             pl.col("Amount").alias("amount"),
             pl.col("Time").alias("time"),
-            pl.col("source"),
+            pl.col("dataset"),
+            pl.col("predict"),
         ]
         target_features: list[pl.Series | pl.Expr] = (
             [pl.col(cls.raw_label_column_name).alias(cls.engineered_label_column_name)]
@@ -97,8 +98,8 @@ class S03E04ModelCustomization:
             passthrough_features={
                 col for col in engineered_df.columns if col.startswith("pca_")
             }
-            | {"source"},
-            categorical_features=set(),
+            | {"predict"},
+            categorical_features={"dataset"},
             numerical_features={
                 col for col in engineered_df.columns if col.startswith("count_")
             }
