@@ -216,23 +216,13 @@ s03e03/submission.csv: \
 # 		--output-file=s03e04/train.transformed.csv \
 # 		--column=dataset__passthrough
 
-# s03e04/split.train.csv s03e04/split.valid.csv s03e04/split.eval.csv: \
-# 		s03e04/train.transformed.csv \
-# 		playground/cli/split_data.py \
-# 		playground/pipelines/s03e04.py
-# 	poetry run python \
-# 		-m playground.cli.split_data \
-# 		--input-file=s03e04/train.transformed.csv \
-# 		--train-output-file=s03e04/split.train.csv \
-# 		--validation-output-file=s03e04/split.valid.csv \
-# 		--evaluation-output-file=s03e04/split.eval.csv \
-# 		--customization=playground.pipelines.s03e04.model_customization
 
 s03e04/train.transformed.csv s03e04/test.transformed.csv: \
 		s03e04/train.csv \
 		s03e04/old.csv \
 		s03e04/test.csv \
-		playground/cli/s03e04_prepare_datasets.py
+		playground/cli/s03e04_prepare_datasets.py \
+		playground/pipelines/s03e04.py
 	poetry run python \
 		-m playground.cli.s03e04_prepare_datasets \
 		--train-file=s03e04/train.csv \
@@ -240,6 +230,18 @@ s03e04/train.transformed.csv s03e04/test.transformed.csv: \
 		--old-file=s03e04/old.csv \
 		--train-output-file=s03e04/train.transformed.csv \
 		--test-output-file=s03e04/test.transformed.csv
+
+s03e04/split.train.csv s03e04/split.valid.csv s03e04/split.eval.csv: \
+		s03e04/train.transformed.csv \
+		playground/cli/split_data.py \
+		playground/pipelines/s03e04.py
+	poetry run python \
+		-m playground.cli.split_data \
+		--input-file=s03e04/train.transformed.csv \
+		--train-output-file=s03e04/split.train.csv \
+		--validation-output-file=s03e04/split.valid.csv \
+		--evaluation-output-file=s03e04/split.eval.csv \
+		--customization=playground.pipelines.s03e04.model_customization
 
 s03e04/saved_model: \
 		s03e04/split.train.csv \
@@ -294,13 +296,13 @@ s03e04/saved_model: \
 # 		--output-file=s03e04/test.transformed.csv \
 # 		--column=source__passthrough
 
-# s03e04/submission.csv: \
-# 		s03e04/test.transformed.csv \
-# 		s03e04/saved_model \
-# 		playground/pipelines/s03e04.py
-# 	poetry run python \
-# 		-m playground.cli.predict \
-# 		--customization=playground.pipelines.s03e04.model_customization \
-# 		--input-file=s03e04/test.transformed.csv \
-# 		--output-file=s03e04/submission.csv \
-# 		--model-dir=s03e04/saved_model
+s03e04/submission.csv: \
+		s03e04/test.transformed.csv \
+		s03e04/saved_model \
+		playground/pipelines/s03e04.py
+	poetry run python \
+		-m playground.cli.predict \
+		--customization=playground.pipelines.s03e04.model_customization \
+		--input-file=s03e04/test.transformed.csv \
+		--output-file=s03e04/submission.csv \
+		--model-dir=s03e04/saved_model

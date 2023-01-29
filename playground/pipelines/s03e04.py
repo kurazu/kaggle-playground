@@ -1,4 +1,5 @@
 import logging
+import multiprocessing as mp
 from collections import deque
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -8,6 +9,7 @@ import keras_tuner as kt
 import numpy as np
 import polars as pl
 import tensorflow as tf
+from returns.curry import partial
 from sklearn.metrics import roc_auc_score
 
 from ..feature_engineering import Features
@@ -39,6 +41,20 @@ def count_timestamps(series: Iterable[datetime], period: timedelta) -> Iterable[
         yield len(past)
 
 
+def get_count_series(
+    materialized_timestamps: pl.Series, milliseconds: int
+) -> pl.Series:
+    period = timedelta(milliseconds=milliseconds)
+    logger.debug("Counting timestamps: %s", period)
+    counts = pl.Series(
+        f"count_{milliseconds}",
+        count_timestamps(materialized_timestamps, period),
+        dtype=pl.Int64,
+    )
+    logger.debug("Counted timestamps: %s", period)
+    return counts
+
+
 class S03E04ModelCustomization:
     @classmethod
     def scan_raw_dataset(cls, input_file: Path) -> pl.LazyFrame:
@@ -52,17 +68,15 @@ class S03E04ModelCustomization:
                 (pl.col("Time") * 1000).cast(pl.Duration(time_unit="ms")) + initial_date
             ).alias("ts")
         ).collect()["ts"]
-        count_series: list[pl.Series] = []
-        for milliseconds in [50, 100, 200, 500, 1000]:
-            period = timedelta(milliseconds=milliseconds)
-            logger.debug("Counting timestamps: %s", period)
-            counts = pl.Series(
-                f"count_{milliseconds}",
-                count_timestamps(materialized_timestamps, period),
-                dtype=pl.Int64,
+        logger.debug("Starting timestamps aggregation")
+        with mp.Pool() as pool:
+            count_series = list(
+                pool.imap_unordered(
+                    partial(get_count_series, materialized_timestamps),
+                    [50, 100, 200, 500, 1000],
+                )
             )
-            logger.debug("Counted timestamps: %s", period)
-            count_series.append(counts)
+        logger.debug("Finished timestamps aggregation")
         id_features = [pl.col(cls.id_column_name)]
         pca_features = [pl.col(f"V{i}").alias(f"pca_{i}") for i in range(1, 28 + 1)]
         other_features = [
