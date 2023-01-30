@@ -172,7 +172,7 @@ def main(
     undersampled_negative_new_train_ds = (
         new_train_ds.filter(pl.col(Customization.engineered_label_column_name) == 0.0)
         .collect()
-        .sample(frac=0.05, seed=17)
+        .sample(frac=0.1, seed=17)
     )
     # take all positive samples from the old train set
     positive_old_train_ds = transformed_train_ds.filter(
