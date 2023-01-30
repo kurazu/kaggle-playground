@@ -217,7 +217,7 @@ s03e03/submission.csv: \
 # 		--column=dataset__passthrough
 
 
-s03e04/train.transformed.csv s03e04/test.transformed.csv: \
+s03e04/split.train.csv s03e04/split.valid.csv s03e04/split.eval.csv s03e04/test.transformed.csv: \
 		s03e04/train.csv \
 		s03e04/old.csv \
 		s03e04/test.csv \
@@ -228,20 +228,10 @@ s03e04/train.transformed.csv s03e04/test.transformed.csv: \
 		--train-file=s03e04/train.csv \
 		--test-file=s03e04/test.csv \
 		--old-file=s03e04/old.csv \
-		--train-output-file=s03e04/train.transformed.csv \
-		--test-output-file=s03e04/test.transformed.csv
-
-s03e04/split.train.csv s03e04/split.valid.csv s03e04/split.eval.csv: \
-		s03e04/train.transformed.csv \
-		playground/cli/split_data.py \
-		playground/pipelines/s03e04.py
-	poetry run python \
-		-m playground.cli.split_data \
-		--input-file=s03e04/train.transformed.csv \
 		--train-output-file=s03e04/split.train.csv \
 		--validation-output-file=s03e04/split.valid.csv \
 		--evaluation-output-file=s03e04/split.eval.csv \
-		--customization=playground.pipelines.s03e04.model_customization
+		--test-output-file=s03e04/test.transformed.csv
 
 s03e04/saved_model: \
 		s03e04/split.train.csv \

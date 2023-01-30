@@ -9,12 +9,13 @@ import keras_tuner as kt
 import numpy as np
 import polars as pl
 import tensorflow as tf
+from matplotlib import pyplot as plt
 from returns.curry import partial
-from sklearn.metrics import roc_auc_score
+from sklearn import metrics
 
 from ..feature_engineering import Features
 from ..feature_engineering.config import Summary
-from ..models.binary_classification import build_model
+from ..models.binary_classification import build_model, find_best_threshold
 from ..models.class_weights import get_class_weights
 from ..models.datasets import get_datasets
 from ..models.evaluation import get_ground_truth
@@ -219,8 +220,38 @@ class S03E04ModelCustomization:
         predictions = np.squeeze(model.predict(datasets.evaluation), axis=-1)
         ground_truth = get_ground_truth(datasets.evaluation)
 
-        score = roc_auc_score(ground_truth, predictions)
+        score = metrics.roc_auc_score(ground_truth, predictions)
         logger.info("Eval ROC AUC score: %.3f", score)
+
+        fpr, tpr, thresholds = metrics.roc_curve(ground_truth, predictions)
+        roc_auc = metrics.auc(fpr, tpr)
+        display = metrics.RocCurveDisplay(
+            fpr=fpr, tpr=tpr, roc_auc=roc_auc, estimator_name="DNN ensemble"
+        )
+        display.plot()
+        plt.savefig(model_directory / "roc_curve.png")
+
+        best_threshold = find_best_threshold(
+            ground_truth, predictions, metrics.roc_auc_score
+        )
+        logger.info("Best threshold: %.2f", best_threshold)
+        prediction_decisions = (predictions > best_threshold).astype(np.float32)
+        count_confusion_matrix = metrics.confusion_matrix(
+            ground_truth, prediction_decisions
+        )
+        metrics.ConfusionMatrixDisplay(
+            count_confusion_matrix,
+            display_labels=["legit", "fraud"],
+        ).plot(cmap="Blues", values_format="d")
+        plt.savefig(model_directory / "count_confusion_matrix.png")
+        normalized_confusion_matrix = metrics.confusion_matrix(
+            ground_truth, prediction_decisions, normalize="true"
+        )
+        metrics.ConfusionMatrixDisplay(
+            normalized_confusion_matrix,
+            display_labels=["legit", "fraud"],
+        ).plot(cmap="Blues", values_format=".2f")
+        plt.savefig(model_directory / "normalized_confusion_matrix.png")
 
     @classmethod
     def predict(cls, *, model_directory: Path, input: Path, output: Path) -> None:

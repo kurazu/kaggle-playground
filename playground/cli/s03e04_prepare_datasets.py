@@ -2,6 +2,7 @@ from pathlib import Path
 
 import click
 import polars as pl
+from sklearn.model_selection import train_test_split
 
 from ..feature_engineering.engineering import get_feature_config
 from ..feature_engineering.transform import transform_engineered
@@ -41,17 +42,52 @@ from ..pipelines.s03e04 import S03E04ModelCustomization as Customization
     required=True,
 )
 @click.option(
+    "--validation-output-file",
+    "validation_output_file_path",
+    type=click.Path(dir_okay=False, file_okay=True, writable=True, path_type=Path),
+    required=True,
+)
+@click.option(
+    "--evaluation-output-file",
+    "evaluation_output_file_path",
+    type=click.Path(dir_okay=False, file_okay=True, writable=True, path_type=Path),
+    required=True,
+)
+@click.option(
     "--test-output-file",
     "test_output_file_path",
     type=click.Path(dir_okay=False, file_okay=True, writable=True, path_type=Path),
     required=True,
+)
+@click.option(
+    "--train-parts",
+    type=int,
+    required=True,
+    default=7,
+)
+@click.option(
+    "--validation-parts",
+    type=int,
+    required=True,
+    default=1,
+)
+@click.option(
+    "--evaluation-parts",
+    type=int,
+    required=True,
+    default=1,
 )
 def main(
     train_file_path: Path,
     old_file_path: Path,
     test_file_path: Path,
     train_output_file_path: Path,
+    validation_output_file_path: Path,
+    evaluation_output_file_path: Path,
     test_output_file_path: Path,
+    train_parts: int,
+    validation_parts: int,
+    evaluation_parts: int,
 ) -> None:
     # Load trainig samples from two sources
     raw_train_ds = Customization.scan_raw_dataset(train_file_path).with_columns(
@@ -96,10 +132,44 @@ def main(
         features_configuration,
         id_column_name=Customization.id_column_name,
         engineered_label_column_name=Customization.engineered_label_column_name,
+    ).select(pl.exclude("predict__passthrough"))
+
+    # Split the train set into train, validation, evaluation
+    # We want the validation and evaluation sets to be composed only of samples from
+    # the original train set (not the old related dataset) to get more meaningful
+    # evaluation results.
+    transformed_original_ds = transformed_train_ds.filter(
+        pl.col("dataset__train__dummy") == 1.0
     )
-    transformed_train_ds.select(pl.exclude("predict__passthrough")).collect().write_csv(
-        train_output_file_path
+    ids, labels = transformed_original_ds.select(
+        [Customization.id_column_name, Customization.engineered_label_column_name]
+    ).collect()
+    train_ids, rest_ids, train_labels, rest_labels = train_test_split(
+        ids,
+        labels,
+        test_size=(evaluation_parts + validation_parts)
+        / (train_parts + evaluation_parts + validation_parts),
+        random_state=17,
+        stratify=labels,
     )
+    validation_ids, evaluation_ids = train_test_split(
+        rest_ids,
+        test_size=evaluation_parts / (evaluation_parts + validation_parts),
+        random_state=17,
+        stratify=rest_labels,
+    )
+    transformed_train_ds.filter(
+        pl.col(Customization.id_column_name).is_in(train_ids)
+        | (pl.col("dataset__train__dummy") == 0.0)
+    ).collect().write_csv(train_output_file_path)
+
+    transformed_train_ds.filter(
+        pl.col(Customization.id_column_name).is_in(validation_ids)
+    ).collect().write_csv(validation_output_file_path)
+
+    transformed_train_ds.filter(
+        pl.col(Customization.id_column_name).is_in(evaluation_ids)
+    ).collect().write_csv(evaluation_output_file_path)
 
     # Apply feature engineering to the test set
     engineered_joined_test_ds = Customization.feature_engineering(joined_test_ds)
