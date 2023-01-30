@@ -160,7 +160,11 @@ def main(
     )
     transformed_train_ds.filter(
         pl.col(Customization.id_column_name).is_in(train_ids)
-        | (pl.col("dataset__train__dummy") == 0.0)
+        | (
+            (pl.col("dataset__train__dummy") == 0.0)
+            # only use fraudulent transactions from the old dataset
+            & (pl.col(Customization.engineered_label_column_name) == 1.0)
+        )
     ).collect().write_csv(train_output_file_path)
 
     transformed_train_ds.filter(
