@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import click
@@ -8,6 +9,8 @@ from ..feature_engineering.engineering import get_feature_config
 from ..feature_engineering.transform import transform_engineered
 from ..logs import setup_logging
 from ..pipelines.s03e04 import S03E04ModelCustomization as Customization
+
+logger = logging.getLogger(__name__)
 
 
 @click.command()
@@ -158,14 +161,39 @@ def main(
         random_state=17,
         stratify=rest_labels,
     )
-    transformed_train_ds.filter(
+    new_train_ds = transformed_train_ds.filter(
         pl.col(Customization.id_column_name).is_in(train_ids)
-        | (
-            (pl.col("dataset__train__dummy") == 0.0)
-            # only use fraudulent transactions from the old dataset
-            & (pl.col(Customization.engineered_label_column_name) == 1.0)
-        )
-    ).collect().write_csv(train_output_file_path)
+    )
+    # take all positive samples from the new train set
+    all_new_positive_train_ds = new_train_ds.filter(
+        pl.col(Customization.engineered_label_column_name) == 1.0
+    ).collect()
+    # take 20% of negative samples from the new train set
+    undersampled_negative_new_train_ds = (
+        new_train_ds.filter(pl.col(Customization.engineered_label_column_name) == 0.0)
+        .collect()
+        .sample(frac=0.05, seed=17)
+    )
+    # take all positive samples from the old train set
+    positive_old_train_ds = transformed_train_ds.filter(
+        (pl.col("dataset__train__dummy") == 0.0)
+        # only use fraudulent transactions from the old dataset
+        & (pl.col(Customization.engineered_label_column_name) == 1.0)
+    ).collect()
+    logger.debug(
+        "Train set will contain %d positive new samples, %d negative new samples and %d positive old samples",
+        len(all_new_positive_train_ds),
+        len(undersampled_negative_new_train_ds),
+        len(positive_old_train_ds),
+    )
+    full_train_ds = pl.concat(
+        [
+            all_new_positive_train_ds,
+            undersampled_negative_new_train_ds,
+            positive_old_train_ds,
+        ]
+    )
+    full_train_ds.write_csv(train_output_file_path)
 
     transformed_train_ds.filter(
         pl.col(Customization.id_column_name).is_in(validation_ids)
