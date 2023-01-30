@@ -43,14 +43,9 @@ def find_best_hyperparameters(
     )
 
     callbacks = [
-        tf.keras.callbacks.ReduceLROnPlateau(
-            monitor="val_loss",
-            factor=0.1,
-            patience=1,
-            verbose=1,
-        ),
         tf.keras.callbacks.EarlyStopping(
-            monitor="val_loss",
+            monitor=objective_name,
+            mode=objective_direction,
             patience=3,
             verbose=1,
             restore_best_weights=True,
@@ -87,14 +82,9 @@ def train_model_ensemble(
     logger.debug("Training model to determine best epoch")
     model = build_model(best_hps, inputs)
     callbacks = [
-        tf.keras.callbacks.ReduceLROnPlateau(
-            monitor="val_loss",
-            factor=0.1,
-            patience=1,
-            verbose=1,
-        ),
         tf.keras.callbacks.EarlyStopping(
-            monitor="val_loss",
+            monitor=objective_name,
+            mode=objective_direction,
             patience=3,
             verbose=1,
             restore_best_weights=True,

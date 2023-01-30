@@ -73,7 +73,18 @@ class S03E04ModelCustomization:
             count_series = list(
                 pool.imap_unordered(
                     partial(get_count_series, materialized_timestamps),
-                    [50, 100, 200, 500, 1000],
+                    [
+                        100,  # a tenth of a second
+                        500,  # half a second
+                        1000,  # a second
+                        10000,  # ten seconds
+                        30000,  # thirty seconds
+                        60000,  # a minute
+                        300000,  # five minutes
+                        600000,  # ten minutes
+                        1800000,  # thirty minutes
+                        3600000,  # an hour
+                    ],
                 )
             )
         logger.debug("Finished timestamps aggregation")
