@@ -181,7 +181,8 @@ def main(
         & (pl.col(Customization.engineered_label_column_name) == 1.0)
     ).collect()
     logger.debug(
-        "Train set will contain %d positive new samples, %d negative new samples and %d positive old samples",
+        "Train set will contain %d positive new samples, "
+        "%d negative new samples and %d positive old samples",
         len(all_new_positive_train_ds),
         len(undersampled_negative_new_train_ds),
         len(positive_old_train_ds),
