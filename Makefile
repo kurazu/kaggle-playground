@@ -354,3 +354,14 @@ s03e04_autoenc/saved_model: \
 		--validation-file=s03e04_autoenc/split.valid.csv \
 		--evaluation-file=s03e04_autoenc/split.eval.csv \
 		--output-dir=s03e04_autoenc/saved_model
+
+s03e04_autoenc/submission.csv: \
+		s03e04_autoenc/test.transformed.csv \
+		s03e04_autoenc/saved_model \
+		playground/pipelines/s03e04_autoenc.py
+	poetry run python \
+		-m playground.cli.predict \
+		--customization=playground.pipelines.s03e04_autoenc.model_customization \
+		--input-file=s03e04_autoenc/test.transformed.csv \
+		--output-file=s03e04_autoenc/submission.csv \
+		--model-dir=s03e04_autoenc/saved_model

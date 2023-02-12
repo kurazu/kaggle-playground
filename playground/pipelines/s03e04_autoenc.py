@@ -78,9 +78,12 @@ class S03E04AutoencoderModelCustomization:
 
     @classmethod
     def build_autoencoder_model(
-        cls, hp: kt.HyperParameters, input: tf.Tensor
+        cls, hp: kt.HyperParameters, no_features: int
     ) -> tf.keras.Model:
-        columns: int = input.shape[-1]
+        input = tf.keras.layers.Input(
+            shape=(no_features,), name="representation", dtype=tf.float32
+        )
+
         latent_space_size = 8
         dropout_rate = 0.5
 
@@ -91,7 +94,8 @@ class S03E04AutoencoderModelCustomization:
                 tf.keras.layers.Dense(16, activation="relu"),
                 tf.keras.layers.Dropout(dropout_rate),
                 tf.keras.layers.Dense(latent_space_size, activation="relu"),
-            ]
+            ],
+            name="encoder",
         )
         decoder = tf.keras.Sequential(
             [
@@ -99,16 +103,25 @@ class S03E04AutoencoderModelCustomization:
                 tf.keras.layers.Dropout(dropout_rate),
                 tf.keras.layers.Dense(32, activation="relu"),
                 tf.keras.layers.Dropout(dropout_rate),
-                tf.keras.layers.Dense(columns, activation="linear"),
-            ]
+                tf.keras.layers.Dense(no_features, activation="linear"),
+            ],
+            name="decoder",
         )
         latent_representation = encoder(input)
         reconstructed = decoder(latent_representation)
-        model = tf.keras.Model(inputs=input, outputs=reconstructed)
+        model = tf.keras.Model(
+            inputs=input,
+            outputs={
+                "reconstructed": reconstructed,
+                "latent_representation": latent_representation,
+            },
+        )
         model.compile(
             optimizer="adam",
-            loss=tf.keras.losses.MeanAbsoluteError(name="mae"),
-            metrics=tf.keras.metrics.MeanSquaredError(name="mse"),
+            loss={
+                "reconstructed": tf.keras.losses.MeanAbsoluteError(name="mae"),
+                "latent_representation": lambda y_true, y_pred: 0.0,
+            },
         )
         return model
 
@@ -121,12 +134,14 @@ class S03E04AutoencoderModelCustomization:
         fraud_ds = unbatched_ds.filter(lambda x, y: tf.equal(y, 1)).batch(batch_size)
         stacked_legit_ds = legit_ds.map(
             lambda x, y: tf.stack(
-                [value for name, value in x.items() if name != "id"], axis=1
+                [value for name, value in x.items() if name != cls.id_column_name],
+                axis=1,
             )
         )
         stacked_fraud_ds = fraud_ds.map(
             lambda x, y: tf.stack(
-                [value for name, value in x.items() if name != "id"], axis=1
+                [value for name, value in x.items() if name != cls.id_column_name],
+                axis=1,
             )
         )
         autoenc_legit_ds = stacked_legit_ds.map(lambda x: (x, x))
@@ -137,11 +152,171 @@ class S03E04AutoencoderModelCustomization:
     def get_classification_dataset(cls, ds: tf.data.Dataset) -> tf.data.Dataset:
         stacked_ds = ds.map(
             lambda x, y: (
-                tf.stack([value for name, value in x.items() if name != "id"], axis=-1),
+                tf.stack(
+                    [value for name, value in x.items() if name != cls.id_column_name],
+                    axis=-1,
+                ),
                 tf.expand_dims(y, axis=-1),
             )
         )
         return stacked_ds
+
+    @classmethod
+    def plot_learning_curves(
+        cls, history: tf.keras.callbacks.History, target_path: Path
+    ) -> None:
+        train_loss_history = history.history["loss"]
+        val_loss_history = history.history["val_loss"]
+        plt.figure()
+        plt.plot(train_loss_history, label="Training Loss")
+        plt.plot(val_loss_history, label="Validation Loss")
+        plt.legend()
+        plt.savefig(target_path)
+
+    @classmethod
+    def train_autoencoder(
+        cls,
+        *,
+        train_ds: tf.data.Dataset,
+        validation_ds: tf.data.Dataset,
+        autoencoder_model: tf.keras.Model,
+        no_features: int,
+        batch_size: int,
+        model_directory: Path,
+    ) -> tf.keras.Model:
+        train_legit_ds, train_fraud_ds = cls.get_autoencoder_datasets(
+            train_ds, batch_size=batch_size
+        )
+        validation_legit_ds, validation_fraud_ds = cls.get_autoencoder_datasets(
+            validation_ds, batch_size=batch_size
+        )
+
+        logger.debug("Training autoencoder model...")
+        history = autoencoder_model.fit(
+            train_legit_ds,
+            validation_data=validation_legit_ds,
+            epochs=cls.max_epochs,
+            verbose=1,
+            callbacks=[
+                tf.keras.callbacks.EarlyStopping(
+                    monitor="val_loss",
+                    patience=3,
+                    verbose=1,
+                    restore_best_weights=True,
+                ),
+            ],
+        )
+        logger.debug("Autoencoder model training finished")
+        cls.plot_learning_curves(history, model_directory / "autoencoder_learning.png")
+
+        logger.debug("Reconstructing legit validation data...")
+        legit_reconstructions = autoencoder_model.predict(validation_legit_ds)[
+            "reconstructed"
+        ]
+        logger.debug("Gathering legit validation data...")
+        legit_arr = tf.TensorArray(
+            dtype=tf.float32,
+            size=0,
+            dynamic_size=True,
+            clear_after_read=True,
+            infer_shape=False,
+            element_shape=tf.TensorShape([None, no_features]),
+        )
+        for x, _ in validation_legit_ds:
+            legit_arr = legit_arr.write(legit_arr.size(), x)
+        legit_representations = legit_arr.concat()
+        logger.debug("Calculating legit validation losses...")
+        legit_losses = tf.keras.losses.mae(legit_reconstructions, legit_representations)
+
+        logger.debug("Reconstructing fraud validation data...")
+        fraud_reconstructions = autoencoder_model.predict(validation_fraud_ds)[
+            "reconstructed"
+        ]
+        logger.debug("Gathering fraud validation data...")
+        fraud_arr = tf.TensorArray(
+            dtype=tf.float32,
+            size=0,
+            dynamic_size=True,
+            clear_after_read=True,
+            infer_shape=False,
+            element_shape=tf.TensorShape([None, no_features]),
+        )
+        for x, _ in validation_fraud_ds:
+            fraud_arr = fraud_arr.write(fraud_arr.size(), x)
+        fraud_representations = fraud_arr.concat()
+        logger.debug("Calculating fraud validation losses...")
+        fraud_losses = tf.keras.losses.mae(fraud_reconstructions, fraud_representations)
+
+        logger.debug("Saving losses histogram...")
+        fig = plt.figure()
+        legit_ax = fig.add_subplot(111)
+        fraud_ax = plt.twinx()
+        legit_ax.hist(
+            legit_losses.numpy(), bins=20, label="Legit", alpha=0.5, color="b"
+        )
+        fraud_ax.hist(
+            fraud_losses.numpy(), bins=20, label="Fraud", alpha=0.5, color="r"
+        )
+        legit_ax.legend(loc="upper left")
+        fraud_ax.legend(loc="upper right")
+        plt.savefig(model_directory / "losses_hist.png")
+
+    @classmethod
+    def build_classification_wrapper_model(
+        cls,
+        frozen_autoencoder_model: tf.keras.Model,
+        input_spec: dict[str, tf.TensorSpec],
+    ) -> tf.keras.Model:
+        features = {
+            key: spec for key, spec in input_spec.items() if key != cls.id_column_name
+        }
+        inputs = {
+            key: tf.keras.layers.Input(shape=spec.shape[1:], name=key, dtype=spec.dtype)
+            for key, spec in features.items()
+        }
+        all_inputs = tf.stack([input for input in inputs.values()], axis=-1)
+        reconstructed = frozen_autoencoder_model(all_inputs, training=False)[
+            "reconstructed"
+        ]
+        mae = tf.keras.losses.mae(reconstructed, all_inputs)
+        expanded_mae = tf.expand_dims(mae, axis=-1)
+
+        hidden = tf.keras.layers.Dense(16, activation="relu")(expanded_mae)
+        output = tf.keras.layers.Dense(1, activation="sigmoid")(hidden)
+        wrapper_model = tf.keras.Model(inputs=inputs, outputs=output)
+        wrapper_model.compile(
+            loss="binary_crossentropy",
+            optimizer="adam",
+            metrics=[tf.keras.metrics.AUC(name="auc")],
+        )
+        return wrapper_model
+
+    @classmethod
+    def train_classification_model(
+        cls,
+        *,
+        train_ds: tf.data.Dataset,
+        validation_ds: tf.data.Dataset,
+        wrapper_model: tf.keras.Model,
+        model_directory: Path,
+    ) -> None:
+        history = wrapper_model.fit(
+            train_ds,
+            validation_data=validation_ds,
+            epochs=cls.max_epochs,
+            verbose=1,
+            callbacks=[
+                tf.keras.callbacks.EarlyStopping(
+                    monitor="val_auc",
+                    patience=3,
+                    verbose=1,
+                    restore_best_weights=True,
+                ),
+            ],
+        )
+        cls.plot_learning_curves(
+            history, model_directory / "classification_learning.png"
+        )
 
     @classmethod
     def train(
@@ -169,134 +344,50 @@ class S03E04AutoencoderModelCustomization:
             batch_size=batch_size,
             label_column_name=cls.engineered_label_column_name,
         )
-
-        train_legit_ds, train_fraud_ds = cls.get_autoencoder_datasets(
-            datasets.train, batch_size=batch_size
-        )
-        validation_legit_ds, validation_fraud_ds = cls.get_autoencoder_datasets(
-            datasets.validation, batch_size=batch_size
-        )
-
-        input_spec, _ = train_legit_ds.element_spec
-        input = tf.keras.layers.Input(
-            shape=input_spec.shape[1:], name="representation", dtype=input_spec.dtype
-        )
+        input_spec, _label_spec = datasets.train.element_spec
+        no_features = len(set(input_spec) - {cls.id_column_name})
 
         best_hps: kt.HyperParameters | None = None
-
         best_hps = kt.HyperParameters()
 
-        autoencoder_model = cls.build_autoencoder_model(best_hps, input)
-        logger.debug("Training autoencoder model...")
-        history = autoencoder_model.fit(
-            train_legit_ds,
-            validation_data=validation_legit_ds,
-            epochs=cls.max_epochs,
-            verbose=1,
-            callbacks=[
-                tf.keras.callbacks.EarlyStopping(
-                    monitor="val_loss",
-                    patience=3,
-                    verbose=1,
-                    restore_best_weights=True,
-                ),
-            ],
-        )
-        logger.debug("Autoencoder model training finished")
-        train_loss_history = history.history["loss"]
-        val_loss_history = history.history["val_loss"]
+        logger.debug("Building autoencoder model...")
+        autoencoder_model = cls.build_autoencoder_model(best_hps, no_features)
 
         model_directory.mkdir(exist_ok=True)
 
-        plt.plot(train_loss_history, label="Training Loss")
-        plt.plot(val_loss_history, label="Validation Loss")
-        plt.legend()
-        plt.savefig(model_directory / "losses.png")
-
-        logger.debug("Reconstructing legit validation data...")
-        legit_reconstructions = autoencoder_model.predict(validation_legit_ds)
-        logger.debug("Gathering legit validation data...")
-        legit_arr = tf.TensorArray(
-            dtype=tf.float32,
-            size=0,
-            dynamic_size=True,
-            clear_after_read=True,
-            infer_shape=False,
-            element_shape=tf.TensorShape([None, input_spec.shape[-1]]),
+        logger.debug("Training autoencoder model...")
+        cls.train_autoencoder(
+            train_ds=datasets.train,
+            validation_ds=datasets.validation,
+            model_directory=model_directory,
+            autoencoder_model=autoencoder_model,
+            no_features=no_features,
+            batch_size=batch_size,
         )
-        for x, _ in validation_legit_ds:
-            legit_arr = legit_arr.write(legit_arr.size(), x)
-        legit_representations = legit_arr.concat()
-        logger.debug("Calculating legit validation losses...")
-        legit_losses = tf.keras.losses.mae(legit_reconstructions, legit_representations)
-
-        logger.debug("Reconstructing fraud validation data...")
-        fraud_reconstructions = autoencoder_model.predict(validation_fraud_ds)
-        logger.debug("Gathering fraud validation data...")
-        fraud_arr = tf.TensorArray(
-            dtype=tf.float32,
-            size=0,
-            dynamic_size=True,
-            clear_after_read=True,
-            infer_shape=False,
-            element_shape=tf.TensorShape([None, input_spec.shape[-1]]),
-        )
-        for x, _ in validation_fraud_ds:
-            fraud_arr = fraud_arr.write(fraud_arr.size(), x)
-        fraud_representations = fraud_arr.concat()
-        logger.debug("Calculating fraud validation losses...")
-        fraud_losses = tf.keras.losses.mae(fraud_reconstructions, fraud_representations)
-
-        logger.debug("Saving losses histogram...")
-        fig = plt.figure()
-        legit_ax = fig.add_subplot(111)
-        fraud_ax = plt.twinx()
-        legit_ax.hist(
-            legit_losses.numpy(), bins=20, label="Legit", alpha=0.5, color="b"
-        )
-        fraud_ax.hist(
-            fraud_losses.numpy(), bins=20, label="Fraud", alpha=0.5, color="r"
-        )
-        legit_ax.legend(loc="upper left")
-        fraud_ax.legend(loc="upper right")
-        plt.savefig(model_directory / "losses_hist.png")
 
         logger.debug("Creating wrapper model...")
         # freeze the trained model
         autoencoder_model.trainable = False
-        reconstruction = autoencoder_model(input, training=False)
-        mae = tf.keras.losses.mae(reconstruction, input)
-        output = tf.keras.layers.Dense(1, activation="sigmoid")(mae)
-        wrapper_model = tf.keras.Model(inputs=input, outputs=output)
-        wrapper_model.compile(
-            loss="binary_crossentropy",
-            optimizer="adam",
-            metrics=[tf.keras.metrics.AUC(name="auc")],
+        wrapper_model = cls.build_classification_wrapper_model(
+            frozen_autoencoder_model=autoencoder_model, input_spec=input_spec
         )
+
         logger.debug("Training wrapper model...")
-        wrapper_model.fit(
-            cls.get_classification_dataset(datasets.train),
-            validation_data=cls.get_classification_dataset(datasets.validation),
-            epochs=cls.max_epochs,
-            verbose=1,
-            callbacks=[
-                tf.keras.callbacks.EarlyStopping(
-                    monitor="val_auc",
-                    patience=3,
-                    verbose=1,
-                    restore_best_weights=True,
-                ),
-            ],
+        cls.train_classification_model(
+            train_ds=datasets.train,
+            validation_ds=datasets.validation,
+            model_directory=model_directory,
+            wrapper_model=wrapper_model,
         )
 
         logger.debug("Saving wrapper model to %s", model_directory)
         wrapper_model.save(model_directory)
 
         logger.debug("Evaluating model...")
-        loss, auc = model.evaluate(datasets.evaluation)
+        loss, auc = wrapper_model.evaluate(datasets.evaluation)
         logger.info("Eval loss: %.3f, auc: %.3f", loss, auc)
 
-        predictions = np.squeeze(model.predict(datasets.evaluation), axis=-1)
+        predictions = np.squeeze(wrapper_model.predict(datasets.evaluation), axis=-1)
         ground_truth = get_ground_truth(datasets.evaluation)
 
         score = metrics.roc_auc_score(ground_truth, predictions)
@@ -334,7 +425,6 @@ class S03E04AutoencoderModelCustomization:
 
     @classmethod
     def predict(cls, *, model_directory: Path, input: Path, output: Path) -> None:
-        raise NotImplementedError()
         predict(
             model_directory=model_directory,
             input=input,
