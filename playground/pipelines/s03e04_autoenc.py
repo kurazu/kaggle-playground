@@ -14,6 +14,7 @@ from sklearn import metrics
 from ..feature_engineering import Features
 from ..feature_engineering.config import Summary
 from ..models.binary_classification import find_best_threshold
+from ..models.class_weights import get_class_weights
 from ..models.datasets import get_datasets
 from ..models.evaluation import get_ground_truth
 from ..models.predict import predict
@@ -123,7 +124,7 @@ class S03E04AutoencoderModelCustomization:
                 tf.keras.layers.Dropout(dropout_rate),
                 tf.keras.layers.Dense(32, activation="relu"),
                 tf.keras.layers.Dropout(dropout_rate),
-                tf.keras.layers.Dense(latent_space_size, activation="relu"),
+                tf.keras.layers.Dense(latent_space_size, activation="linear"),
             ],
             name="encoder",
         )
@@ -339,6 +340,7 @@ class S03E04AutoencoderModelCustomization:
         validation_ds: tf.data.Dataset,
         wrapper_model: tf.keras.Model,
         model_directory: Path,
+        class_weight: dict[float, float],
     ) -> None:
         history = wrapper_model.fit(
             train_ds,
@@ -353,6 +355,7 @@ class S03E04AutoencoderModelCustomization:
                     restore_best_weights=True,
                 ),
             ],
+            class_weight=class_weight,
         )
         cls.plot_learning_curves(
             history, model_directory / "classification_learning.png"
@@ -411,13 +414,14 @@ class S03E04AutoencoderModelCustomization:
         wrapper_model = cls.build_classification_wrapper_model(
             frozen_autoencoder_model=autoencoder_model, input_spec=input_spec
         )
-
+        class_weight = get_class_weights(train_file, cls.engineered_label_column_name)
         logger.debug("Training wrapper model...")
         cls.train_classification_model(
             train_ds=datasets.train,
             validation_ds=datasets.validation,
             model_directory=model_directory,
             wrapper_model=wrapper_model,
+            class_weight=class_weight,
         )
 
         logger.debug("Saving wrapper model to %s", model_directory)
