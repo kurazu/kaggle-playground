@@ -1,16 +1,12 @@
 import logging
-import multiprocessing as mp
-from collections import deque
-from datetime import datetime, timedelta
 from pathlib import Path
-from typing import ClassVar, Iterable
+from typing import ClassVar
 
 import keras_tuner as kt
 import numpy as np
 import polars as pl
 import tensorflow as tf
 from matplotlib import pyplot as plt
-from returns.curry import partial
 from sklearn import metrics
 
 from ..feature_engineering import Features
@@ -18,7 +14,6 @@ from ..feature_engineering.config import Summary
 from ..models.binary_classification import find_best_threshold
 from ..models.datasets import get_datasets
 from ..models.evaluation import get_ground_truth
-from ..models.inputs import get_inputs
 from ..models.predict import predict
 from . import ModelCustomizationInterface
 
@@ -38,6 +33,7 @@ class S03E04AutoencoderModelCustomization:
         ]
         other_features: list[pl.Series | pl.Expr] = [
             pl.col("Amount").alias("amount"),
+            pl.col("Time").alias("time"),
         ]
         target_features: list[pl.Series | pl.Expr] = (
             [pl.col(cls.raw_label_column_name).alias(cls.engineered_label_column_name)]
@@ -68,7 +64,9 @@ class S03E04AutoencoderModelCustomization:
             },
             categorical_features=set(),
             numerical_features={"amount"},
-            cyclical_features={},
+            cyclical_features={
+                "time": 60 * 60 * 24,
+            },
         )
 
     raw_label_column_name: ClassVar[str] = "Class"
@@ -275,14 +273,24 @@ class S03E04AutoencoderModelCustomization:
             for key, spec in features.items()
         }
         all_inputs = tf.stack([input for input in inputs.values()], axis=-1)
-        reconstructed = frozen_autoencoder_model(all_inputs, training=False)[
-            "reconstructed"
-        ]
+        autoencoder_outputs = frozen_autoencoder_model(all_inputs, training=False)
+        reconstructed = autoencoder_outputs["reconstructed"]
+        latent_representation = autoencoder_outputs["latent_representation"]
         mae = tf.keras.losses.mae(reconstructed, all_inputs)
         expanded_mae = tf.expand_dims(mae, axis=-1)
-
-        hidden = tf.keras.layers.Dense(16, activation="relu")(expanded_mae)
-        output = tf.keras.layers.Dense(1, activation="sigmoid")(hidden)
+        mae_and_latent = tf.concat([expanded_mae, latent_representation], axis=-1)
+        dropout_rate = 0.5
+        classifier = tf.keras.Sequential(
+            [
+                tf.keras.layers.Dense(32, activation="relu"),
+                tf.keras.layers.Dropout(dropout_rate),
+                tf.keras.layers.Dense(16, activation="relu"),
+                tf.keras.layers.Dropout(dropout_rate),
+                tf.keras.layers.Dense(1, activation="sigmoid"),
+            ],
+            name="classifier",
+        )
+        output = classifier(mae_and_latent)
         wrapper_model = tf.keras.Model(inputs=inputs, outputs=output)
         wrapper_model.compile(
             loss="binary_crossentropy",
@@ -396,7 +404,7 @@ class S03E04AutoencoderModelCustomization:
         fpr, tpr, thresholds = metrics.roc_curve(ground_truth, predictions)
         roc_auc = metrics.auc(fpr, tpr)
         display = metrics.RocCurveDisplay(
-            fpr=fpr, tpr=tpr, roc_auc=roc_auc, estimator_name="DNN ensemble"
+            fpr=fpr, tpr=tpr, roc_auc=roc_auc, estimator_name="autoencoder + DNN"
         )
         display.plot()
         plt.savefig(model_directory / "roc_curve.png")
