@@ -5,6 +5,56 @@
       "std": 150.7950165451664,
       "type": "numerical"
     },
+    "count_100": {
+      "mean": 7.631504730090494,
+      "std": 8.968310426687845,
+      "type": "numerical"
+    },
+    "count_1000": {
+      "mean": 13.681566565812831,
+      "std": 13.331280173629256,
+      "type": "numerical"
+    },
+    "count_10000": {
+      "mean": 58.642343094706774,
+      "std": 43.55260379978322,
+      "type": "numerical"
+    },
+    "count_1800000": {
+      "mean": 5120.805242574009,
+      "std": 2354.2844387354785,
+      "type": "numerical"
+    },
+    "count_30000": {
+      "mean": 144.66318013590168,
+      "std": 96.89187088392808,
+      "type": "numerical"
+    },
+    "count_300000": {
+      "mean": 976.0768040743123,
+      "std": 537.5553718609476,
+      "type": "numerical"
+    },
+    "count_3600000": {
+      "mean": 10032.797749270978,
+      "std": 4654.004819934818,
+      "type": "numerical"
+    },
+    "count_500": {
+      "mean": 7.631742033231567,
+      "std": 8.968406678374137,
+      "type": "numerical"
+    },
+    "count_60000": {
+      "mean": 254.87205709878657,
+      "std": 161.01174002260476,
+      "type": "numerical"
+    },
+    "count_600000": {
+      "mean": 1791.9113992214632,
+      "std": 897.687754904085,
+      "type": "numerical"
+    },
     "pca_1": {
       "type": "passthrough"
     },
@@ -88,6 +138,10 @@
     },
     "pca_9": {
       "type": "passthrough"
+    },
+    "time": {
+      "period": 86400,
+      "type": "cyclical"
     }
   },
   "summaries": {}
