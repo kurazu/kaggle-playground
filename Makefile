@@ -296,3 +296,61 @@ s03e04/submission.csv: \
 		--input-file=s03e04/test.transformed.csv \
 		--output-file=s03e04/submission.csv \
 		--model-dir=s03e04/saved_model
+
+# S03E04 autoencoder
+
+s03e04_autoenc/features.json: \
+		s03e04/train.csv \
+		playground/pipelines/s03e04_autoenc.py
+	poetry run python \
+		-m playground.cli.fit \
+		--train-file=s03e04/train.csv \
+		--config-file=s03e04_autoenc/features.json \
+		--customization=playground.pipelines.s03e04_autoenc.model_customization
+
+s03e04_autoenc/train.transformed.csv: \
+		s03e04/train.csv \
+		s03e04_autoenc/features.json \
+		playground/pipelines/s03e04_autoenc.py
+	poetry run python \
+		-m playground.cli.transform \
+		--config-file=s03e04_autoenc/features.json \
+		--customization=playground.pipelines.s03e04_autoenc.model_customization \
+		--input-file=s03e04/train.csv \
+		--output-file=s03e04_autoenc/train.transformed.csv
+
+s03e04_autoenc/test.transformed.csv: \
+		s03e04/test.csv \
+		s03e04_autoenc/features.json \
+		playground/pipelines/s03e04_autoenc.py
+	poetry run python \
+		-m playground.cli.transform \
+		--config-file=s03e04_autoenc/features.json \
+		--customization=playground.pipelines.s03e04_autoenc.model_customization \
+		--input-file=s03e04/test.csv \
+		--output-file=s03e04_autoenc/test.transformed.csv
+
+s03e04_autoenc/split.train.csv s03e04_autoenc/split.valid.csv s03e04_autoenc/split.eval.csv: \
+		s03e04_autoenc/train.transformed.csv \
+		playground/cli/split_data.py \
+		playground/pipelines/s03e04_autoenc.py
+	poetry run python \
+		-m playground.cli.split_data \
+		--input-file=s03e04_autoenc/train.transformed.csv \
+		--train-output-file=s03e04_autoenc/split.train.csv \
+		--validation-output-file=s03e04_autoenc/split.valid.csv \
+		--evaluation-output-file=s03e04_autoenc/split.eval.csv \
+		--customization=playground.pipelines.s03e04_autoenc.model_customization
+
+s03e04_autoenc/saved_model: \
+		s03e04_autoenc/split.train.csv \
+		s03e04_autoenc/split.valid.csv \
+		s03e04_autoenc/split.eval.csv \
+		playground/pipelines/s03e04_autoenc.py
+	poetry run python \
+		-m playground.cli.train \
+		--customization=playground.pipelines.s03e04_autoenc.model_customization \
+		--train-file=s03e04_autoenc/split.train.csv \
+		--validation-file=s03e04_autoenc/split.valid.csv \
+		--evaluation-file=s03e04_autoenc/split.eval.csv \
+		--output-dir=s03e04_autoenc/saved_model
